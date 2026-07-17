@@ -6,7 +6,7 @@
   const laneOffsets = [-1, 0, 1];
   const laneBoundaryOffsets = [-1.5, -0.5, 0.5, 1.5];
   const keyMap = new Map();
-  const APP_VERSION = "20260618-rank-share";
+  const APP_VERSION = "20260619-perf-tune";
   const ACTIVITY_SHARE_URL = `https://show.jd.com/n/QwMWVE53XAodKr0x/?pageKey=QwMWVE53XAodKr0x&v=${APP_VERSION}`;
   const SHARE_THUMB_URL = "https://m.360buyimg.com/babel/jfs/t16171/127/2505983508/7852/4cfd7bdf/5abc8954N23307760.png";
   const LEADERBOARD_VERSION = APP_VERSION;
@@ -14,6 +14,9 @@
   const GAME_AUDIO_VOLUME = 0.12;
   const TARGET_FRAME_MS = 1000 / 60;
   const DOM_EFFECT_FRAME_MS = 1000 / 15;
+  const LOW_PERF_DOM_EFFECT_FRAME_MS = 1000 / 10;
+  const FRAME_DROP_MS = 42;
+  const FRAME_DROP_LIMIT = 18;
   const MAX_ACTIVE_ITEMS = 24;
   const MAX_PARTICLES = 48;
   const SCORE_RULES = {
@@ -79,6 +82,7 @@
   Laya.stage.alignV = Laya.Stage.ALIGN_TOP;
 
   const root = document.getElementById("laya-root");
+  let rootScale = root ? root.clientWidth / W : 1;
   const startOverlay = document.getElementById("startOverlay");
   const startGameBtn = document.getElementById("startGameBtn");
   const resultOverlay = document.getElementById("resultOverlay");
@@ -129,6 +133,13 @@
   let renderedBoatMode = "";
   let renderedBoatFilter = "";
   let renderedBoatDuration = "";
+  let lowPerformanceMode = false;
+  let droppedFrameCount = 0;
+  let domEffectFrameMs = DOM_EFFECT_FRAME_MS;
+  let leaderboardReleaseTimer = 0;
+  let lastStaticRenderMode = "";
+  let pageHidden = document.hidden;
+  let resumeBgmOnVisible = false;
 
   state.items = createOpeningItems();
   state.x = playerLaneX(1);
@@ -157,6 +168,9 @@
   });
   if (leaderboardFrame && leaderboardLoading) {
     leaderboardFrame.addEventListener("load", () => {
+      if (leaderboardFrame.getAttribute("src") && leaderboardFrame.getAttribute("src") !== "about:blank") {
+        leaderboardFrame.dataset.loaded = "1";
+      }
       leaderboardLoading.classList.add("is-hidden");
     });
   }
@@ -165,19 +179,36 @@
   document.addEventListener("click", startBgm, true);
   document.addEventListener("keydown", onKeyDown);
   document.addEventListener("keyup", onKeyUp);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+  window.addEventListener("resize", refreshRootScale, { passive: true });
 
   let lastTime = performance.now();
   let lastFrameTime = lastTime;
   let lastDomEffectTime = 0;
   Laya.timer.frameLoop(1, null, () => {
+    if (pageHidden) return;
     const now = performance.now();
-    if (now - lastFrameTime < TARGET_FRAME_MS) return;
+    const elapsed = now - lastFrameTime;
+    if (elapsed < TARGET_FRAME_MS) return;
+    updatePerformanceMode(elapsed);
     const dt = Math.min(0.05, (now - lastTime) / 1000);
     lastTime = now;
     lastFrameTime = now;
+    const isAnimating = state.mode === "playing" || state.mode === "intro";
+    if (!isAnimating) {
+      if (lastStaticRenderMode !== state.mode) {
+        render();
+        updateLaneBuoys();
+        updateWakeGif();
+        updateBoatGif();
+        lastStaticRenderMode = state.mode;
+      }
+      return;
+    }
+    lastStaticRenderMode = "";
     update(dt);
     render();
-    if (now - lastDomEffectTime >= DOM_EFFECT_FRAME_MS) {
+    if (now - lastDomEffectTime >= domEffectFrameMs) {
       updateLaneBuoys();
       updateWakeGif();
       lastDomEffectTime = now;
@@ -189,8 +220,40 @@
     return Math.max(min, Math.min(max, value));
   }
 
+  function refreshRootScale() {
+    if (!root) return;
+    rootScale = root.clientWidth / W;
+    lastStaticRenderMode = "";
+  }
+
+  function handleVisibilityChange() {
+    pageHidden = document.hidden;
+    document.documentElement.classList.toggle("is-page-hidden", pageHidden);
+    if (pageHidden) {
+      resumeBgmOnVisible = Boolean(gameBgm && !gameBgm.paused);
+      gameBgm?.pause();
+      return;
+    }
+    const now = performance.now();
+    lastTime = now;
+    lastFrameTime = now;
+    lastStaticRenderMode = "";
+    if (resumeBgmOnVisible && (state.mode === "playing" || state.mode === "intro")) startBgm();
+    resumeBgmOnVisible = false;
+  }
+
   function stopGameInput(event) {
     event.stopPropagation();
+  }
+
+  function updatePerformanceMode(elapsed) {
+    if (state.mode !== "playing" && state.mode !== "intro") return;
+    if (elapsed > FRAME_DROP_MS) droppedFrameCount += 1;
+    else droppedFrameCount = Math.max(0, droppedFrameCount - 1);
+    if (lowPerformanceMode || droppedFrameCount < FRAME_DROP_LIMIT) return;
+    lowPerformanceMode = true;
+    domEffectFrameMs = LOW_PERF_DOM_EFFECT_FRAME_MS;
+    document.documentElement.classList.add("is-low-performance");
   }
 
   function bindReliableTap(target, handler) {
@@ -510,6 +573,10 @@
       window.location.href = `./leaderboard.html?v=${LEADERBOARD_VERSION}`;
       return;
     }
+    if (leaderboardReleaseTimer) {
+      clearTimeout(leaderboardReleaseTimer);
+      leaderboardReleaseTimer = 0;
+    }
     if (leaderboardOverlay.classList.contains("is-hidden")) {
       modeBeforeLeaderboard = state.mode;
       if (state.mode === "playing" || state.mode === "intro") {
@@ -520,7 +587,7 @@
         updateUi();
       }
     }
-    if (leaderboardFrame.getAttribute("src")) {
+    if (leaderboardFrame.dataset.loaded === "1") {
       if (leaderboardLoading) leaderboardLoading.classList.add("is-hidden");
       leaderboardFrame.contentWindow?.postMessage({ type: "dragonboat:refreshLeaderboard" }, "*");
     } else {
@@ -539,6 +606,12 @@
       updateUi();
     }
     modeBeforeLeaderboard = "";
+    leaderboardReleaseTimer = window.setTimeout(() => {
+      if (!leaderboardFrame || !leaderboardOverlay.classList.contains("is-hidden")) return;
+      delete leaderboardFrame.dataset.loaded;
+      leaderboardFrame.src = "about:blank";
+      if (leaderboardLoading) leaderboardLoading.classList.add("is-hidden");
+    }, 30000);
   }
 
   function openRulesOverlay() {
@@ -756,7 +829,8 @@
   }
 
   function burst(x, y, color, count) {
-    const safeCount = Math.min(count, MAX_PARTICLES - state.particles.length);
+    const desiredCount = lowPerformanceMode ? Math.ceil(count * 0.55) : count;
+    const safeCount = Math.min(desiredCount, MAX_PARTICLES - state.particles.length);
     for (let i = 0; i < safeCount; i += 1) {
       state.particles.push({
         x,
@@ -949,7 +1023,7 @@
   function updateLaneBuoys() {
     const root = document.getElementById("laya-root");
     if (!root || !laneBuoys.length) return;
-    const scale = root.clientWidth / W;
+    const scale = rootScale;
     const span = roadBottomY - horizonY + 92;
     const flow = state.mode === "paused" ? 0 : state.bgOffset * 0.22;
     for (const buoy of laneBuoys) {
@@ -960,13 +1034,9 @@
       const buoyW = 16 + depth * 38;
       const buoyH = 22 + depth * 52;
       const x = laneBoundaryXAt(buoy.boundary, y) - buoyW / 2;
-      buoy.img.style.display = visible ? "block" : "none";
-      buoy.img.style.left = `${x * scale}px`;
-      buoy.img.style.top = `${(y - buoyH * 0.72) * scale}px`;
-      buoy.img.style.width = `${buoyW * scale}px`;
-      buoy.img.style.height = `${buoyH * scale}px`;
+      buoy.img.style.visibility = visible ? "visible" : "hidden";
       buoy.img.style.opacity = `${0.44 + depth * 0.28}`;
-      buoy.img.style.transform = `scale(${0.92 + depth * 0.16})`;
+      buoy.img.style.transform = `translate3d(${x * scale}px, ${(y - buoyH * 0.72) * scale}px, 0) scale(${(buoyW / 54) * scale}, ${(buoyH / 74) * scale})`;
     }
   }
 
@@ -985,47 +1055,49 @@
     if (!wakeGif) return;
     const root = document.getElementById("laya-root");
     if (!root) return;
-    const scale = root.clientWidth / W;
+    const scale = rootScale;
     const wakeW = 178;
     const wakeH = 268;
     const x = state.x - wakeW / 2;
     const y = 502;
-    wakeGif.style.left = `${x * scale}px`;
-    wakeGif.style.top = `${y * scale}px`;
-    wakeGif.style.width = `${wakeW * scale}px`;
-    wakeGif.style.height = `${wakeH * scale}px`;
     wakeGif.style.opacity = state.mode === "over" ? "0.72" : "1";
-    wakeGif.style.transform = "scale(1)";
+    wakeGif.style.transform = `translate3d(${x * scale}px, ${y * scale}px, 0) scale(${scale})`;
   }
 
   function updateBoatGif() {
     if (!boatGif) return;
     const root = document.getElementById("laya-root");
     if (!root) return;
-    const scale = root.clientWidth / W;
+    const scale = rootScale;
     const boatW = 180;
     const boatH = 264;
     const shake = state.mode === "playing" && state.hitShake > 0 ? Math.sin(performance.now() * 0.07) * 7 * (state.hitShake / 0.38) : 0;
     const x = state.x - boatW / 2 + shake;
     const y = 448;
-    boatGif.style.left = `${x * scale}px`;
-    boatGif.style.top = `${y * scale}px`;
-    boatGif.style.width = `${boatW * scale}px`;
-    boatGif.style.height = `${boatH * scale}px`;
-    const boatMode = state.mode === "over" ? "over" : "active";
+    boatGif.style.setProperty("--boat-x", `${x * scale}px`);
+    boatGif.style.setProperty("--boat-y", `${y * scale}px`);
+    const boatMode = state.mode === "over"
+      ? "over"
+      : state.mode === "playing" || state.mode === "intro"
+        ? "moving"
+        : "idle";
     if (renderedBoatMode !== boatMode) {
       renderedBoatMode = boatMode;
       boatGif.style.zIndex = state.mode === "over" ? "4" : "6";
       boatGif.style.opacity = state.mode === "over" ? "0.74" : "1";
-      boatGif.style.animationPlayState = state.mode === "over" ? "paused" : "running";
+      boatGif.style.animationPlayState = state.mode === "playing" || state.mode === "intro" ? "running" : "paused";
     }
     const hitFlash = state.mode === "playing" && state.hitCooldown > 0 && Math.floor(state.hitCooldown * 16) % 2 === 0;
-    const nextFilter = hitFlash ? "brightness(1.15) sepia(1) saturate(5) hue-rotate(-25deg) drop-shadow(0 0 10px rgba(255, 45, 34, 0.72))" : "";
+    const nextFilter = hitFlash
+      ? lowPerformanceMode
+        ? "brightness(1.08) sepia(1) saturate(3) hue-rotate(-22deg)"
+        : "brightness(1.15) sepia(1) saturate(5) hue-rotate(-25deg) drop-shadow(0 0 10px rgba(255, 45, 34, 0.72))"
+      : "";
     if (renderedBoatFilter !== nextFilter) {
       renderedBoatFilter = nextFilter;
       boatGif.style.filter = nextFilter;
     }
-    boatGif.style.setProperty("--boat-scale", "1");
+    boatGif.style.setProperty("--boat-scale", String(scale));
     const nextDuration = `${boatAnimationDurationForScore(state.score).toFixed(2)}s`;
     if (renderedBoatDuration !== nextDuration) {
       renderedBoatDuration = nextDuration;

@@ -3,7 +3,7 @@
   const GATEWAY_QUERY_TOP_RANK_URL = "https://ms.jr.jd.com/gw2/generic/redEnv001/newh5/m/queryTopRank";
   const GATEWAY_GET_USER_BY_PIN_URL = "https://ms.jr.jd.com/gw2/generic/icCreator/newh5/m/getDefaultUserByPin";
   const JD_LOGIN_URL = "https://plogin.m.jd.com/user/login.action?jrWebNativeLogin=false&appid=100&returnurl=";
-  const APP_VERSION = "20260618-rank-share";
+  const APP_VERSION = "20260619-perf-tune";
   const ACTIVITY_URL = `https://show.jd.com/n/QwMWVE53XAodKr0x/?pageKey=QwMWVE53XAodKr0x&v=${APP_VERSION}`;
   const BASE_GAME_CODE = "dragonboat_h5_202606";
   const BASE_GAME_CODE_DATE = "20260618";

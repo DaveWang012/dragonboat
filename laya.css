@@ -96,6 +96,11 @@ body {
   opacity: 0.72;
 }
 
+.is-low-performance #laya-root::before {
+  mix-blend-mode: normal;
+  opacity: 0.38;
+}
+
 .game-bg {
   position: absolute;
   inset: 0;
@@ -108,6 +113,10 @@ body {
   user-select: none;
   transform: translateZ(0);
   filter: saturate(1.06) brightness(1.13) contrast(1.2);
+}
+
+.is-low-performance .game-bg {
+  filter: brightness(1.08) contrast(1.08);
 }
 
 #laya-root #layaContainer {
@@ -815,10 +824,16 @@ body {
 
 .boat-gif {
   position: absolute;
+  left: 0;
+  top: 0;
   z-index: 4;
+  width: 180px;
+  height: 264px;
   pointer-events: none;
   object-fit: contain;
-  transform-origin: 50% 70%;
+  transform-origin: 0 0;
+  --boat-x: 0px;
+  --boat-y: 0px;
   --boat-scale: 1;
   --boat-row-duration: 0.78s;
   animation: boat-row-pulse var(--boat-row-duration) ease-in-out infinite;
@@ -828,31 +843,67 @@ body {
 @keyframes boat-row-pulse {
   0%,
   100% {
-    transform: translateY(0) rotate(-0.4deg) scale(var(--boat-scale));
+    transform:
+      translate3d(var(--boat-x), var(--boat-y), 0)
+      scale(var(--boat-scale))
+      translate(90px, 185px)
+      translateY(0)
+      rotate(-0.4deg)
+      translate(-90px, -185px);
   }
 
   50% {
-    transform: translateY(3px) rotate(0.8deg) scale(var(--boat-scale));
+    transform:
+      translate3d(var(--boat-x), var(--boat-y), 0)
+      scale(var(--boat-scale))
+      translate(90px, 185px)
+      translateY(3px)
+      rotate(0.8deg)
+      translate(-90px, -185px);
   }
 }
 
 .wake-gif {
   position: absolute;
+  left: 0;
+  top: 0;
   z-index: 3;
+  width: 178px;
+  height: 268px;
   pointer-events: none;
   object-fit: contain;
-  transform-origin: 50% 28%;
+  transform-origin: 0 0;
   mix-blend-mode: screen;
   filter: saturate(1.35) brightness(1.42) contrast(1.08);
+  will-change: transform;
+}
+
+.is-low-performance .wake-gif {
+  mix-blend-mode: normal;
+  filter: brightness(1.18);
 }
 
 .lane-buoy-gif {
   position: absolute;
+  left: 0;
+  top: 0;
   z-index: 2;
+  width: 54px;
+  height: 74px;
   pointer-events: none;
   object-fit: contain;
-  transform-origin: 50% 72%;
+  transform-origin: 0 0;
   filter: drop-shadow(0 4px 5px rgba(0, 42, 36, 0.28));
+}
+
+.is-low-performance .lane-buoy-gif {
+  filter: none;
+}
+
+.is-page-hidden .boat-gif,
+.is-page-hidden .wake-gif,
+.is-page-hidden .lane-buoy-gif {
+  visibility: hidden;
 }
 
 #laya-root #layaContainer canvas {
