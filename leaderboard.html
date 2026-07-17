@@ -1,0 +1,1272 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>端午龙舟冲刺赛排行榜</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+        background:
+          url("./assets/background.webp") center / cover no-repeat,
+          #06251f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        min-height: 100vh;
+        min-height: 100svh;
+        min-height: 100dvh;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+        background:
+          url("./assets/background.webp") center / cover no-repeat,
+          #06251f;
+      }
+
+      .board-shell {
+        position: relative;
+        width: min(100vw, calc(100dvh * 9 / 16), 414px);
+        height: min(100dvh, calc(100vw * 16 / 9), 736px);
+        overflow: hidden;
+        background: #0b9b9b;
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.46);
+      }
+
+      .board-bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: saturate(1.04) brightness(0.86) contrast(1.12);
+      }
+
+      .board-mask {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse at 50% 22%, rgba(255, 239, 158, 0.18), transparent 34%),
+          linear-gradient(180deg, rgba(2, 36, 34, 0.22), rgba(1, 18, 17, 0.62));
+        backdrop-filter: blur(2px);
+      }
+
+      .board-card {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: min(92%, 346px);
+        height: min(88dvh, 688px);
+        max-height: min(88%, 688px);
+        transform: translate(-50%, -50%);
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto auto;
+        padding: 20px 18px 18px;
+        color: #fff5cf;
+        text-align: center;
+        border: 1px solid rgba(255, 232, 150, 0.76);
+        border-radius: 26px;
+        background:
+          linear-gradient(160deg, rgba(22, 100, 75, 0.93), rgba(8, 63, 60, 0.88) 48%, rgba(4, 35, 34, 0.94)),
+          radial-gradient(circle at 50% 0%, rgba(255, 231, 134, 0.22), transparent 44%);
+        box-shadow:
+          0 24px 56px rgba(0, 19, 18, 0.48),
+          inset 0 1px 0 rgba(255, 255, 255, 0.24),
+          inset 0 -18px 36px rgba(0, 38, 34, 0.2);
+      }
+
+      .board-card::before {
+        content: "";
+        position: absolute;
+        inset: 9px;
+        pointer-events: none;
+        border: 1px solid rgba(255, 236, 168, 0.22);
+        border-radius: 20px;
+      }
+
+      .seal {
+        position: absolute;
+        top: -12px;
+        right: 28px;
+        margin: 0;
+        padding: 7px 6px;
+        color: #fff8e8;
+        font-size: 13px;
+        font-weight: 900;
+        line-height: 1.1;
+        writing-mode: vertical-rl;
+        border-radius: 12px 3px 12px 3px;
+        background: linear-gradient(160deg, #d63824, #97140f);
+        box-shadow: 0 9px 18px rgba(37, 4, 2, 0.32);
+      }
+
+      .kicker {
+        margin: 0 0 7px;
+        color: #aef5df;
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      h1 {
+        margin: 0 0 14px;
+        color: #ffe178;
+        font-family: Georgia, "Songti SC", serif;
+        font-size: clamp(28px, 7.2vw, 34px);
+        font-weight: 900;
+        line-height: 1.06;
+        text-shadow: 0 3px 0 #6a2f16, 0 9px 18px rgba(0, 0, 0, 0.34);
+      }
+
+      .rank-list {
+        display: grid;
+        align-content: start;
+        gap: 7px;
+        margin: 0 0 18px;
+        padding: 0 2px 0 0;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        list-style: none;
+        touch-action: pan-y;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .rank-row,
+      .rank-list li {
+        display: grid;
+        grid-template-columns: 42px 32px minmax(0, 1fr) 92px;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+        min-height: 56px;
+        padding: 8px 9px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 233, 158, 0.34);
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(9, 67, 58, 0.78), rgba(3, 43, 40, 0.72));
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.12),
+          0 5px 12px rgba(0, 22, 20, 0.18);
+      }
+
+      .rank-row.is-clickable,
+      .rank-list li.is-clickable {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .rank-row.is-clickable:active,
+      .rank-list li.is-clickable:active {
+        transform: scale(0.99);
+        background: linear-gradient(180deg, rgba(16, 90, 74, 0.92), rgba(8, 60, 54, 0.88));
+      }
+
+      .rank-list li.rank-top {
+        position: relative;
+        border-color: rgba(255, 225, 120, 0.72);
+        background:
+          linear-gradient(90deg, rgba(255, 218, 91, 0.22), transparent 34%),
+          linear-gradient(180deg, rgba(18, 90, 70, 0.9), rgba(4, 50, 44, 0.86));
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.24),
+          inset 0 0 18px rgba(255, 221, 105, 0.1),
+          0 6px 14px rgba(0, 22, 20, 0.2);
+      }
+
+      .rank-list li.rank-top-2 {
+        border-color: rgba(225, 242, 255, 0.62);
+        background:
+          linear-gradient(90deg, rgba(205, 238, 255, 0.18), transparent 34%),
+          linear-gradient(180deg, rgba(16, 83, 71, 0.9), rgba(4, 50, 44, 0.86));
+      }
+
+      .rank-list li.rank-top-3 {
+        border-color: rgba(255, 182, 104, 0.62);
+        background:
+          linear-gradient(90deg, rgba(255, 170, 88, 0.18), transparent 34%),
+          linear-gradient(180deg, rgba(16, 80, 66, 0.9), rgba(4, 48, 43, 0.86));
+      }
+
+      .rank-list li.rank-top.is-clickable:active {
+        background:
+          linear-gradient(90deg, rgba(255, 218, 91, 0.26), transparent 34%),
+          linear-gradient(180deg, rgba(24, 101, 80, 0.94), rgba(8, 62, 55, 0.9));
+      }
+
+      .avatar {
+        width: 32px;
+        height: 32px;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        color: #0d443d;
+        font-size: 15px;
+        font-weight: 900;
+        border: 1px solid rgba(255, 226, 126, 0.44);
+        border-radius: 50%;
+        background: linear-gradient(160deg, #ffe39a, #79d7b8);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26), 0 5px 12px rgba(0, 24, 22, 0.24);
+      }
+
+      .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .rank {
+        color: #ffe178;
+        font-family: inherit;
+        font-size: 16px;
+        font-weight: 900;
+        text-shadow: 0 2px 0 #642d13;
+      }
+
+      .rank-list li.rank-top .rank {
+        display: grid;
+        place-items: center;
+        justify-self: center;
+        width: 30px;
+        height: 30px;
+        color: #6a2d12;
+        font-size: 18px;
+        border: 1px solid rgba(255, 249, 205, 0.88);
+        border-radius: 50%;
+        background: linear-gradient(180deg, #fff3ae 0%, #ffd65e 56%, #f2a22f 100%);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.72),
+          0 3px 8px rgba(87, 38, 9, 0.28);
+        text-shadow: none;
+      }
+
+      .rank-list li.rank-top-1 .rank {
+        font-size: 19px;
+        background: linear-gradient(180deg, #fff6bb 0%, #ffe06a 48%, #f0a72d 100%);
+      }
+
+      .rank-list li.rank-top-2 .rank {
+        color: #21413f;
+        background: linear-gradient(180deg, #f5ffff 0%, #c9ecf5 54%, #91c5d2 100%);
+      }
+
+      .rank-list li.rank-top-3 .rank {
+        color: #612c13;
+        background: linear-gradient(180deg, #ffe0b5 0%, #f2a55c 54%, #c76b32 100%);
+      }
+
+      .rank-list li.rank-top .avatar {
+        border-color: rgba(255, 238, 158, 0.84);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.34),
+          0 0 0 2px rgba(255, 218, 91, 0.14),
+          0 5px 12px rgba(0, 24, 22, 0.26);
+      }
+
+      .rank-list li.rank-top .player strong,
+      .rank-list li.rank-top .score {
+        color: #ffe178;
+      }
+
+      .player {
+        display: grid;
+        min-width: 0;
+        text-align: left;
+      }
+
+      .player strong {
+        color: #ffe69e;
+        font-size: 13px;
+        line-height: 1.18;
+        overflow-wrap: anywhere;
+      }
+
+      .player small {
+        color: #d1f1dc;
+        font-size: 10px;
+        font-weight: 800;
+        line-height: 1.15;
+      }
+
+      .metrics {
+        display: flex;
+        align-items: center;
+        justify-items: end;
+        justify-content: flex-end;
+        min-width: 0;
+      }
+
+      .score {
+        justify-self: end;
+        color: #ffe178;
+        font-family: inherit;
+        font-size: 18px;
+        font-weight: 900;
+        line-height: 1;
+        text-align: right;
+        white-space: nowrap;
+        text-shadow: 0 2px 0 #642d13;
+      }
+
+      .my-rank .rank {
+        font-size: 12px;
+        line-height: 1.12;
+        white-space: pre-line;
+      }
+
+      .empty {
+        margin: 0 0 18px;
+        padding: 18px;
+        color: #ffe69e;
+        border: 1px solid rgba(255, 233, 158, 0.22);
+        border-radius: 16px;
+        background: rgba(3, 46, 43, 0.5);
+      }
+
+      .my-rank {
+        margin: 0 0 12px;
+        color: #ffe39a;
+        border-color: rgba(255, 226, 126, 0.52);
+        background: linear-gradient(180deg, rgba(16, 82, 66, 0.88), rgba(6, 50, 44, 0.86));
+      }
+
+      .back {
+        justify-self: center;
+        width: min(100%, 226px);
+        min-height: 44px;
+        padding: 0 24px;
+        color: #6a2d12;
+        font: inherit;
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: 0;
+        border: 1px solid rgba(255, 249, 197, 0.86);
+        border-radius: 999px;
+        background: linear-gradient(180deg, #fff1ac 0%, #ffd35c 48%, #f2a92f 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      }
+
+      .back:active {
+        transform: none;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      }
+
+      .board-actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        margin-top: 8px;
+      }
+
+      .board-actions .back {
+        width: 100%;
+        min-height: 36px;
+        padding: 0 6px;
+        font-size: 14px;
+        line-height: 1.1;
+        white-space: nowrap;
+      }
+
+      .board-share {
+        width: 100%;
+      }
+
+      .back.secondary {
+        color: #ffe39a;
+        border-color: rgba(255, 226, 126, 0.58);
+        background: rgba(7, 51, 46, 0.64);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 8px 16px rgba(0, 25, 23, 0.24);
+        text-shadow: 0 2px 0 #5e2c13;
+      }
+
+      .back.secondary:active {
+        transform: translateY(2px);
+      }
+
+      .rules-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 40;
+        display: grid;
+        place-items: center;
+        padding: clamp(10px, 3.4vw, 18px);
+        background:
+          radial-gradient(ellipse at 50% 26%, rgba(255, 239, 158, 0.18), transparent 34%),
+          linear-gradient(180deg, rgba(2, 36, 34, 0.24), rgba(1, 18, 17, 0.54));
+        backdrop-filter: blur(2px);
+      }
+
+      .rules-overlay.is-hidden {
+        display: none;
+      }
+
+      .rules-dialog {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: min(100%, 374px);
+        max-height: calc(100dvh - 24px);
+        padding: 26px 18px 18px;
+        overflow: hidden;
+        color: #fff5cf;
+        text-align: center;
+        border: 1px solid rgba(255, 232, 150, 0.76);
+        border-radius: 26px;
+        background:
+          linear-gradient(160deg, rgba(22, 100, 75, 0.93), rgba(8, 63, 60, 0.88) 48%, rgba(4, 35, 34, 0.94)),
+          radial-gradient(circle at 50% 0%, rgba(255, 231, 134, 0.22), transparent 44%);
+        box-shadow:
+          0 24px 56px rgba(0, 19, 18, 0.48),
+          inset 0 1px 0 rgba(255, 255, 255, 0.24),
+          inset 0 -18px 36px rgba(0, 38, 34, 0.2);
+      }
+
+      .rules-dialog::before {
+        content: "";
+        position: absolute;
+        inset: 9px;
+        pointer-events: none;
+        border: 1px solid rgba(255, 236, 168, 0.22);
+        border-radius: 20px;
+      }
+
+      .rules-dialog h2 {
+        flex: none;
+        margin: 0 0 22px;
+        color: #ffe178;
+        font-family: Georgia, "Songti SC", serif;
+        font-size: clamp(34px, 8.8vw, 42px);
+        font-weight: 900;
+        line-height: 1.06;
+        text-shadow: 0 3px 0 #6a2f16, 0 9px 18px rgba(0, 0, 0, 0.34);
+      }
+
+      .rules-dialog {
+        height: min(560px, calc(100dvh - 36px));
+      }
+
+      .rules-content {
+        display: grid;
+        flex: 1;
+        gap: 17px;
+        min-height: 0;
+        text-align: left;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 2px 4px;
+      }
+
+      .rules-formula {
+        display: grid;
+        place-items: center;
+        min-height: 56px;
+        margin: 0;
+        padding: 12px 14px;
+        color: #f5ffff;
+        font-size: clamp(16px, 4.25vw, 19px);
+        font-weight: 900;
+        line-height: 1.4;
+        text-align: center;
+      }
+
+      .rules-section {
+        display: grid;
+        gap: 12px;
+        margin: 0;
+      }
+
+      .rules-section h3 {
+        margin: 0;
+        color: #ffe69e;
+        font-size: clamp(19px, 5vw, 24px);
+        font-weight: 900;
+        line-height: 1.2;
+        text-shadow: 0 2px 0 rgba(45, 17, 7, 0.5);
+      }
+
+      .rules-section p {
+        margin: 0;
+        color: #d1f1dc;
+        font-size: clamp(15px, 4.1vw, 18px);
+        font-weight: 800;
+        line-height: 1.55;
+      }
+
+      .rules-desc {
+        margin: 0;
+        color: #f5ffff;
+        font-size: clamp(15px, 4.1vw, 18px);
+        font-weight: 800;
+        line-height: 1.55;
+      }
+
+      .rules-box {
+        display: grid;
+        gap: 8px;
+        min-height: 0;
+        padding: 16px 14px;
+      }
+
+      .rules-formula,
+      .rules-box {
+        width: 100%;
+        border: 1px solid rgba(255, 226, 126, 0.42);
+        border-radius: 18px;
+        background: rgba(3, 46, 43, 0.54);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      }
+
+      .rules-notice .rules-box {
+        padding: 18px 16px;
+      }
+
+      .rules-prize-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .rules-prize-list p {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin: 0;
+        color: #f5ffff;
+        font-size: clamp(13px, 3.45vw, 16px);
+        font-weight: 900;
+        line-height: 1.45;
+        white-space: nowrap;
+      }
+
+      .rules-prize-list span,
+      .rules-prize-list strong {
+        min-width: 0;
+      }
+
+      .rules-prize-list strong {
+        color: #ffe178;
+        font-weight: 900;
+      }
+
+      .rules-prize-tip {
+        margin-top: 4px;
+      }
+
+      .rules-notice-list {
+        display: grid;
+        gap: 14px;
+        margin: 0;
+        padding: 0;
+        text-align: left;
+      }
+
+      .rules-link {
+        color: #ffe178;
+        font-weight: 900;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      .rules-dialog > .back {
+        align-self: center;
+        flex: none;
+        width: min(100%, 260px);
+        margin-top: 14px;
+      }
+
+      @media (max-width: 719px), (hover: none) and (pointer: coarse) {
+        html,
+        body {
+          position: fixed;
+          inset: 0;
+          display: block;
+          width: 100vw;
+          height: 100vh;
+          height: 100svh;
+          height: 100dvh;
+          min-height: 100vh;
+          min-height: 100svh;
+          min-height: 100dvh;
+        }
+
+        .board-shell {
+          position: fixed;
+          inset: 0;
+          width: 100vw;
+          width: 100dvw;
+          height: 100vh;
+          height: 100svh;
+          height: 100dvh;
+          max-width: none;
+          box-shadow: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="board-shell">
+      <img class="board-bg" src="./assets/background.webp" alt="" />
+      <div class="board-mask"></div>
+      <section class="board-card" aria-label="全部玩家总分排行榜">
+        <p class="seal">总榜</p>
+        <h1>总分排行榜</h1>
+        <ol id="rankList" class="rank-list"></ol>
+        <p id="emptyState" class="empty">暂无成绩，先完成一局比赛吧。</p>
+        <div id="myRank" class="my-rank rank-row"></div>
+        <div class="board-actions">
+          <button class="back" type="button" id="backBtn">返回游戏</button>
+          <button class="back secondary" type="button" id="rulesBtn">游戏规则</button>
+          <button class="back board-share" type="button" id="rankShareBtn">分享</button>
+        </div>
+      </section>
+      <section id="rulesOverlay" class="rules-overlay is-hidden" aria-label="游戏规则声明页">
+        <div class="rules-dialog">
+          <h2>游戏规则</h2>
+          <div class="rules-content">
+            <div class="rules-section">
+              <h3>计分规则</h3>
+              <p class="rules-formula">总分=行驶距离得分+收集粽子得分</p>
+              <div class="rules-box">
+                <p class="rules-desc">行驶得分：每秒约6-13分，距离越远得分越高</p>
+                <p class="rules-desc">收集粽子：普通粽子+30分，金色粽子+60分</p>
+              </div>
+            </div>
+            <div class="rules-section">
+              <h3>障碍物</h3>
+              <div class="rules-box">
+                <p class="rules-desc">障碍物碰撞后会扣减生命值</p>
+                <p class="rules-desc">单次碰撞扣减1点生命值，生命值清零游戏结束</p>
+              </div>
+            </div>
+            <div class="rules-section rules-prize">
+              <h3>奖品详情</h3>
+              <div class="rules-box">
+                <div class="rules-prize-list">
+                  <p><span>每日榜单前1-5名</span><strong>京东Plus卡</strong></p>
+                  <p><span>每日榜单前6-10名</span><strong>天弘基金联名保温杯</strong></p>
+                  <p><span>每日榜单前11-15名</span><strong>天弘基金联名雨伞</strong></p>
+                </div>
+                <p class="rules-desc rules-prize-tip">请您及时关注<a class="rules-link" href="https://roma.jd.com/content/personal?contentId=jimu_user_info-4597013" target="_top">直播&amp;线下活动小助手</a>发布的获奖名单，及时联系小助手兑奖。</p>
+              </div>
+            </div>
+            <div class="rules-section rules-notice">
+              <h3>注意事项</h3>
+              <div class="rules-box">
+                <div class="rules-notice-list">
+                  <p class="rules-desc">1、参与者须登录京东金融账号方可参与活动，未登录账号的游戏积分不予统计，无获奖资格；游戏排行榜仅展示社区总分前50名用户数据，每日22点统一统计当日积分榜单，当日获奖名单以京东金融小助手留存的榜单截图为唯一判定依据。</p>
+                  <p class="rules-desc">2、每日榜单设置15个获奖名额，同一京东账户本次活动仅限获奖一次，领取任意档位奖励后将不再参与后续榜单排名；若已获奖账户再次跻身榜单前十五，对应名次自动顺延至下一位未获奖用户。</p>
+                  <p class="rules-desc">3、获奖名单将由社区小助手统一公示，奖品在登记后发放，获奖用户需在有效期内主动联系小助手填报收货地址，逾期未提交地址视为自动放弃奖项，不予补发；所有奖品将在活动结束后7个工作日内寄出。</p>
+                  <p class="rules-desc">4、严禁使用脚本、批量注册多账号、恶意刷积分等作弊方式套取奖励，一经查实，主办方有权取消其全部获奖资格、追回已发奖品，并限制该账户参与平台后续所有营销活动。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button id="rulesCloseBtn" class="back" type="button">我知道了</button>
+        </div>
+      </section>
+    </main>
+    <script src="https://jrb.jr.jd.com/common/jssdk/jrbridge/3.0.1/jrbridge.js"></script>
+    <script src="./game-api.js?v=20260618-rank-share"></script>
+    <script>
+      const CURRENT_PLAYER_ID = "me";
+      const MAX_RANK_ROWS = 50;
+      const RANK_PROFILE_CACHE_KEY = "dragonboatRankProfileCache";
+      const MY_PROFILE_CACHE_KEY = "dragonboatMyProfile";
+      const RANK_PROFILE_CACHE_TTL = 24 * 60 * 60 * 1000;
+      const MY_PROFILE_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+      const APP_VERSION = "20260618-rank-share";
+      const ACTIVITY_SHARE_URL = `https://show.jd.com/n/QwMWVE53XAodKr0x/?pageKey=QwMWVE53XAodKr0x&v=${APP_VERSION}`;
+      const SHARE_THUMB_URL = "https://m.360buyimg.com/babel/jfs/t16171/127/2505983508/7852/4cfd7bdf/5abc8954N23307760.png";
+      const PERSONAL_PAGE_ENV = "prod";
+      const PERSONAL_PAGE_URLS = {
+        preprod: "https://utest.jr.jd.com/content/personal?romaFileName=pageCommunityPersonal&contentId=",
+        prod: "https://roma.jd.com/content/personal?romaFileName=pageCommunityPersonal&contentId=",
+      };
+
+      function localScores() {
+        try {
+          return JSON.parse(localStorage.getItem("dragonboatLeaderboardAll") || localStorage.getItem("dragonboatLeaderboard") || "[]");
+        } catch {
+          return [];
+        }
+      }
+
+      function localLatestScore() {
+        try {
+          return JSON.parse(localStorage.getItem("dragonboatLatestScore") || "null");
+        } catch {
+          return null;
+        }
+      }
+
+      function isDevelopmentPreview() {
+        const host = window.location.hostname;
+        return host === "localhost" || host === "127.0.0.1" || host === "::1";
+      }
+
+      function firstValue(entry, names) {
+        for (const name of names) {
+          const value = entry && entry[name];
+          if (value !== undefined && value !== null && value !== "") return value;
+        }
+        return "";
+      }
+
+      function cleanUrlValue(value) {
+        const text = String(value || "").trim();
+        const markdownLink = text.match(/^\[[^\]]+\]\((https?:\/\/[^)]+)\)$/);
+        const url = markdownLink ? markdownLink[1] : text;
+        return url.replace(/^http:\/\//, "https://");
+      }
+
+      function parseJsonValue(value) {
+        if (typeof value !== "string") return null;
+        const text = value.trim();
+        if (!text || !/^[{[]/.test(text)) return null;
+        try {
+          return JSON.parse(text);
+        } catch {
+          return null;
+        }
+      }
+
+      function collectFlatValues(source, target = {}, depth = 0, seen = new Set()) {
+        if (!source || typeof source !== "object" || depth > 4 || seen.has(source)) return target;
+        seen.add(source);
+        for (const [key, value] of Object.entries(source)) {
+          if (value === undefined || value === null || value === "") continue;
+          if (Array.isArray(value)) continue;
+          if (typeof value === "object") {
+            collectFlatValues(value, target, depth + 1, seen);
+            continue;
+          }
+          if (target[key] === undefined) target[key] = value;
+          const parsed = parseJsonValue(value);
+          if (parsed) collectFlatValues(parsed, target, depth + 1, seen);
+        }
+        return target;
+      }
+
+      function flattenScoreEntry(entry) {
+        return Object.assign(
+          {},
+          collectFlatValues(entry),
+          entry?.userInfo || entry?.user || entry?.playerInfo || entry?.player || entry?.member || {},
+          entry?.userInfoVO || entry?.userInfoVo || entry?.memberInfo || entry?.rankUserInfo || entry?.profile || entry?.userProfile || {},
+          entry?.rankInfo || entry?.scoreInfo || {},
+          entry || {},
+        );
+      }
+
+      function normalizeScore(entry, index) {
+        const flat = flattenScoreEntry(entry);
+        const pin = firstValue(flat, ["pin", "ptPin", "pt_pin", "userPin", "jdPin", "accountPin", "loginPin"]);
+        const uid = firstValue(flat, ["uid", "UID", "userUid", "userUID", "communityUid", "contentId", "jimuUid", "jimuUserInfoId", "userInfoId"]);
+        const rawName = firstValue(flat, ["name", "nickName", "nickname", "nick", "userName", "userNick", "displayName", "showName", "nick_name"]);
+        return {
+          id: String(firstValue(flat, ["id", "userId", "playerId", "uid", "contentId", "pin", "userPin"])),
+          pin: pin ? String(pin) : "",
+          uid: uid ? String(uid) : "",
+          name: rawName || `玩家${index + 1}`,
+          avatar: cleanUrlValue(firstValue(flat, ["avatar", "avatarUrl", "headImg", "headUrl", "headImageUrl", "headImage", "userImageUrl", "userAvatar", "userImage", "userPic", "imgUrl", "imageUrl", "faceUrl", "icon"])),
+          score: Number(firstValue(flat, ["score", "totalScore", "maxScore", "bestScore"]) || 0),
+          distance: Number(firstValue(flat, ["distance", "meter", "meters", "distanceNum"]) || 0),
+          zongzi: Number(firstValue(flat, ["zongzi", "riceDumpling", "collectCount"]) || 0),
+          rank: Number(firstValue(flat, ["rankNo", "rank", "ranking", "myRankNo"]) || 0),
+          listed: flat.listed,
+          isSelf: Boolean(flat.isSelf || flat.isMe || flat.self || flat.isCurrentUser),
+          isNewBest: Boolean(flat.isNewBest),
+          previousBest: Number(flat.previousBest || 0),
+          time: Number(flat.time || 0),
+          hasFallbackName: !rawName,
+          _raw: entry,
+        };
+      }
+
+      function isFallbackName(name) {
+        return /^玩家\d+$/.test(String(name || ""));
+      }
+
+      function readRankProfileCache() {
+        try {
+          const now = Date.now();
+          const cache = JSON.parse(localStorage.getItem(RANK_PROFILE_CACHE_KEY) || "{}");
+          return Object.fromEntries(
+            Object.entries(cache).filter(([, value]) => value && now - Number(value.time || 0) < RANK_PROFILE_CACHE_TTL),
+          );
+        } catch {
+          return {};
+        }
+      }
+
+      function writeRankProfileCache(cache) {
+        try {
+          localStorage.setItem(RANK_PROFILE_CACHE_KEY, JSON.stringify(cache));
+        } catch {
+          // 用户资料缓存失败不影响排行榜展示。
+        }
+      }
+
+      function readablePlayerPin() {
+        try {
+          return window.DragonBoatScoreApi?.getPlayerPin?.() || "";
+        } catch {
+          return "";
+        }
+      }
+
+      function normalizeMyProfile(profile) {
+        if (!profile) return null;
+        const nickName = profile.nickName || profile.name || "";
+        return {
+          pin: profile.pin || "",
+          uid: profile.uid || "",
+          nickName: nickName && !isFallbackName(nickName) ? nickName : "",
+          avatar: cleanUrlValue(profile.avatar || ""),
+          time: Number(profile.time || Date.now()),
+        };
+      }
+
+      function hasUsableProfile(profile) {
+        return Boolean(profile && (profile.nickName || profile.avatar || profile.uid));
+      }
+
+      function readMyProfileCache() {
+        try {
+          const cache = normalizeMyProfile(JSON.parse(localStorage.getItem(MY_PROFILE_CACHE_KEY) || "null"));
+          if (!hasUsableProfile(cache)) return null;
+          if (Date.now() - Number(cache.time || 0) > MY_PROFILE_CACHE_TTL) return null;
+          const pin = readablePlayerPin();
+          if (pin && cache.pin && pin !== cache.pin) return null;
+          return cache;
+        } catch {
+          return null;
+        }
+      }
+
+      function writeMyProfileCache(profile) {
+        const normalized = normalizeMyProfile(profile);
+        if (!hasUsableProfile(normalized)) return null;
+        const current = readMyProfileCache() || {};
+        const merged = {
+          ...current,
+          ...normalized,
+          pin: normalized.pin || current.pin || readablePlayerPin(),
+          nickName: normalized.nickName || current.nickName || "",
+          avatar: cleanUrlValue(normalized.avatar || current.avatar || ""),
+          uid: normalized.uid || current.uid || "",
+          time: Date.now(),
+        };
+        try {
+          localStorage.setItem(MY_PROFILE_CACHE_KEY, JSON.stringify(merged));
+        } catch {
+          // 当前用户资料缓存失败不影响排行榜展示。
+        }
+        return merged;
+      }
+
+      function mergeRankProfile(row, profile) {
+        if (!profile) return row;
+        const nickName = profile.nickName || profile.name || "";
+        return {
+          ...row,
+          name: nickName || row.name,
+          avatar: cleanUrlValue(profile.avatar || row.avatar || ""),
+          uid: profile.uid || row.uid || "",
+          pin: profile.pin || row.pin || "",
+          hasFallbackName: row.hasFallbackName && !nickName,
+        };
+      }
+
+      function needsProfileHydration(row) {
+        return Boolean(row && row.pin && (!row.uid || !row.avatar || row.hasFallbackName || isFallbackName(row.name)));
+      }
+
+      async function hydrateRankProfiles(scores) {
+        if (!window.DragonBoatScoreApi || typeof window.DragonBoatScoreApi.getUserByPin !== "function") return scores;
+        const cache = readRankProfileCache();
+        const pending = new Map();
+        for (const row of scores) {
+          if (!needsProfileHydration(row)) continue;
+          if (cache[row.pin]) continue;
+          pending.set(row.pin, window.DragonBoatScoreApi.getUserByPin({ pin: row.pin }).catch(() => null));
+        }
+        const now = Date.now();
+        await Promise.all(Array.from(pending.entries()).map(async ([pin, request]) => {
+          const profile = await request;
+          if (!profile) return;
+          cache[pin] = {
+            pin: profile.pin || pin,
+            uid: profile.uid || "",
+            nickName: profile.nickName || "",
+            avatar: cleanUrlValue(profile.avatar || ""),
+            time: now,
+          };
+        }));
+        if (pending.size) writeRankProfileCache(cache);
+        return scores.map((row) => row.pin && cache[row.pin] ? mergeRankProfile(row, cache[row.pin]) : row);
+      }
+
+      function saveMissingProfileDiagnostics(scores) {
+        const missing = scores
+          .filter((row) => row && (!row.uid || !row.avatar || row.hasFallbackName || isFallbackName(row.name)))
+          .slice(0, 10)
+          .map((row) => ({
+            rank: row.rank,
+            score: row.score,
+            pin: row.pin,
+            uid: row.uid,
+            id: row.id,
+            name: row.name,
+            raw: row._raw,
+          }));
+        try {
+          localStorage.setItem("dragonboatRankMissingProfiles", JSON.stringify({ time: Date.now(), rows: missing }));
+        } catch {
+          // 调试信息写入失败不影响排行榜展示。
+        }
+      }
+
+      function firstArray(values) {
+        return values.find((value) => Array.isArray(value)) || [];
+      }
+
+      function rankRowsFromPayload(payload) {
+        const resultData = payload?.resultData || {};
+        const data = resultData?.data || {};
+        const result = resultData?.result || data?.result || {};
+        return firstArray([
+          resultData.rankList,
+          resultData.list,
+          resultData.topRank,
+          resultData.topList,
+          resultData.ranks,
+          resultData.records,
+          resultData.rows,
+          data,
+          data.rankList,
+          data.list,
+          data.topRank,
+          data.topList,
+          data.ranks,
+          data.records,
+          data.rows,
+          data.data && data.data.rankList,
+          data.data && data.data.list,
+          result.rankList,
+          result.list,
+          result.topRank,
+          result.topList,
+          result.ranks,
+          result.records,
+          result.rows,
+        ]);
+      }
+
+      async function fetchMyProfile() {
+        // 通过 pin 直接查询用户头像、昵称和 UID
+        if (!window.DragonBoatScoreApi) return null;
+        try {
+          const profile = await window.DragonBoatScoreApi.getUserByPin();
+          return writeMyProfileCache(profile) || { nickName: profile.nickName, avatar: cleanUrlValue(profile.avatar), uid: profile.uid };
+        } catch (e) {
+          if (isDevelopmentPreview()) console.warn("[排行榜] 查询当前用户信息失败:", e.message);
+          return readMyProfileCache();
+        }
+      }
+
+      function buildMyScore(scores, latest, myProfile) {
+        // 只有本局超过历史最高分时，才按上榜记录查找排名。
+        let rankEntry = null;
+        if (latest.isNewBest && latest.score > 0) {
+          rankEntry = scores.find((row) => row.score === latest.score) || null;
+        }
+
+        const previousBestEntry = latest.previousBest > 0
+          ? scores.find((row) => row.score === latest.previousBest)
+          : null;
+        const profileFromRank = rankEntry || previousBestEntry || {};
+        if (profileFromRank && (profileFromRank.avatar || profileFromRank.uid || !isFallbackName(profileFromRank.name))) {
+          writeMyProfileCache({
+            pin: profileFromRank.pin || "",
+            uid: profileFromRank.uid || "",
+            nickName: profileFromRank.name || "",
+            avatar: profileFromRank.avatar || "",
+          });
+        }
+
+        // 合并：优先用本次查询结果，其次用当前用户缓存，再用榜单中匹配到的本人记录补头像昵称。
+        const cachedProfile = readMyProfileCache() || {};
+        const profile = myProfile || cachedProfile;
+        const me = {
+          ...latest,
+          avatar: cleanUrlValue(profile.avatar || profileFromRank.avatar || latest.avatar || ""),
+          name: profile.nickName || profileFromRank.name || latest.name || "我",
+          uid: profile.uid || profileFromRank.uid || latest.uid || "",
+        };
+        if (rankEntry) {
+          me._rankEntry = rankEntry;
+        }
+        return me;
+      }
+
+      async function loadScores() {
+        if (window.DragonBoatScoreApi) {
+          // 首屏只等待榜单接口，头像昵称补全放到后续异步刷新，避免移动端打开时长时间黑屏。
+          const payload = await window.DragonBoatScoreApi.queryTopRank();
+          const rankGameCode = payload.queryGameCode || window.DragonBoatScoreApi.getGameCode();
+          const rows = rankRowsFromPayload(payload);
+          const scores = rows.map(normalizeScore);
+          saveMissingProfileDiagnostics(scores);
+          try {
+            localStorage.setItem("dragonboatLastRankQuery", JSON.stringify({
+              ok: true,
+              gameCode: rankGameCode,
+              source: "gateway",
+              rowCount: rows.length,
+              time: Date.now(),
+            }));
+          } catch {
+            // 排行榜查询日志写入失败不影响展示。
+          }
+
+          // 本局成绩
+          const latest = normalizeScore(localLatestScore() || {}, 0);
+          const initialPayload = { scores, me: buildMyScore(scores, latest, null), source: "gateway" };
+
+          Promise.all([
+            fetchMyProfile(),
+            hydrateRankProfiles(scores).catch(() => scores),
+          ]).then(([myProfile, hydratedScores]) => {
+            saveMissingProfileDiagnostics(hydratedScores);
+            renderScores({
+              scores: hydratedScores,
+              me: buildMyScore(hydratedScores, latest, myProfile),
+              source: "gateway",
+            });
+          });
+
+          return initialPayload;
+        }
+        return { scores: localScores().map(normalizeScore), me: normalizeScore(localLatestScore() || {}, 0), source: "local" };
+      }
+
+      function avatarNode(row) {
+        const avatar = document.createElement("span");
+        avatar.className = "avatar";
+        if (row.avatar) {
+          const img = document.createElement("img");
+          img.src = row.avatar;
+          img.alt = "";
+          avatar.appendChild(img);
+        } else {
+          avatar.textContent = row.name.slice(0, 1);
+        }
+        return avatar;
+      }
+
+      function resolveMine(sortedScores, me) {
+        if (!me || !me.score) {
+          return {
+            row: { id: CURRENT_PLAYER_ID, name: "我", avatar: "", distance: 0, score: 0 },
+            rankText: "本局\n得分",
+          };
+        }
+
+        return { row: me, rankText: "本局\n得分" };
+      }
+
+      function completeTopRows(sortedScores) {
+        const rows = sortedScores.slice(0, MAX_RANK_ROWS);
+        if (rows.length >= MAX_RANK_ROWS) return rows;
+        const startLength = rows.length;
+        const baseScore = rows.length ? rows[rows.length - 1].score : 2800;
+        const baseDistance = rows.length ? rows[rows.length - 1].distance : 520;
+        for (let index = startLength; index < MAX_RANK_ROWS; index += 1) {
+          const offset = index - startLength + 1;
+          rows.push({
+            id: `mock-${index + 1}`,
+            name: `玩家${index + 1}`,
+            avatar: "",
+            distance: Math.max(60, Math.round(baseDistance - offset * 6)),
+            score: Math.max(100, Math.round(baseScore - offset * 32)),
+            rank: index + 1,
+            listed: true,
+            time: 0,
+          });
+        }
+        return rows;
+      }
+
+      function profileUrlForUid(uid) {
+        const params = new URLSearchParams(window.location.search || "");
+        const env = params.get("personalEnv") || PERSONAL_PAGE_ENV;
+        const baseUrl = PERSONAL_PAGE_URLS[env] || PERSONAL_PAGE_URLS.prod;
+        return `${baseUrl}${encodeURIComponent(uid)}`;
+      }
+
+      function navigateToProfile(uid) {
+        if (!uid) return;
+        const url = profileUrlForUid(uid);
+        try {
+          if (window.top && window.top !== window) {
+            window.top.location.href = url;
+            return;
+          }
+        } catch {
+          // 跨域嵌入时可能无法操作顶层页面，回退到当前页面跳转。
+        }
+        window.location.href = url;
+      }
+
+      function bindProfileClick(item, row) {
+        const uid = row && row.uid;
+        item.classList.toggle("is-clickable", Boolean(uid));
+        if (!uid) {
+          item.removeAttribute("role");
+          item.removeAttribute("tabindex");
+          item.removeAttribute("aria-label");
+          item.onclick = null;
+          item.onkeydown = null;
+          return;
+        }
+        item.setAttribute("role", "button");
+        item.setAttribute("tabindex", "0");
+        item.setAttribute("aria-label", `查看${row.name || "用户"}的个人页`);
+        item.onclick = () => navigateToProfile(uid);
+        item.onkeydown = (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            navigateToProfile(uid);
+          }
+        };
+      }
+
+      function fillRankRow(item, row, rankText) {
+        const rank = document.createElement("span");
+        const player = document.createElement("span");
+        const name = document.createElement("strong");
+        const metrics = document.createElement("span");
+        const score = document.createElement("span");
+        rank.className = "rank";
+        rank.textContent = rankText;
+        player.className = "player";
+        name.textContent = row.name || "玩家";
+        metrics.className = "metrics";
+        score.className = "score";
+        score.textContent = `${Math.round(row.score || 0).toLocaleString("zh-CN")}分`;
+        player.append(name);
+        metrics.append(score);
+        item.replaceChildren(rank, avatarNode(row), player, metrics);
+      }
+
+      function renderScores(payload) {
+        const list = document.getElementById("rankList");
+        const empty = document.getElementById("emptyState");
+        const myRank = document.getElementById("myRank");
+        const sortedScores = payload.scores.sort((a, b) => b.score - a.score);
+        const rows = payload.source === "gateway" ? sortedScores.slice(0, MAX_RANK_ROWS) : completeTopRows(sortedScores);
+        const mine = resolveMine(sortedScores, payload.me);
+        document.documentElement.dataset.rankSource = payload.source || "local";
+        list.replaceChildren();
+        empty.hidden = rows.length > 0;
+        fillRankRow(myRank, mine.row, mine.rankText);
+        bindProfileClick(myRank, mine.row);
+        for (const [index, row] of rows.entries()) {
+          const item = document.createElement("li");
+          if (index < 3) item.classList.add("rank-top", `rank-top-${index + 1}`);
+          fillRankRow(item, row, String(index + 1));
+          bindProfileClick(item, row);
+          list.appendChild(item);
+        }
+      }
+
+      document.getElementById("backBtn").addEventListener("click", () => {
+        if (new URLSearchParams(window.location.search).get("embedded") === "1" && window.parent !== window) {
+          window.parent.postMessage({ type: "dragonboat:closeLeaderboard" }, "*");
+          return;
+        }
+        window.location.href = "./index.html";
+      });
+
+      const rulesOverlay = document.getElementById("rulesOverlay");
+      const rulesBtn = document.getElementById("rulesBtn");
+      const rulesCloseBtn = document.getElementById("rulesCloseBtn");
+      const rankShareBtn = document.getElementById("rankShareBtn");
+
+      if (rulesBtn) {
+        rulesBtn.addEventListener("click", () => {
+          if (rulesOverlay) rulesOverlay.classList.remove("is-hidden");
+        });
+      }
+
+      if (rulesCloseBtn) {
+        rulesCloseBtn.addEventListener("click", () => {
+          if (rulesOverlay) rulesOverlay.classList.add("is-hidden");
+        });
+      }
+
+      if (rankShareBtn) {
+        rankShareBtn.addEventListener("click", () => {
+          // 通过 postMessage 通知父页面执行分享，复用游戏页分享逻辑
+          if (window.parent !== window) {
+            window.parent.postMessage({ type: "dragonboat:share" }, "*");
+          }
+        });
+      }
+
+      let rankRefreshTask = null;
+
+      function refreshScores() {
+        if (rankRefreshTask) return rankRefreshTask;
+        rankRefreshTask = loadScores().then(renderScores).catch((error) => {
+          document.documentElement.dataset.rankError = error.message || "接口调用失败";
+          try {
+            const gameCode = window.DragonBoatScoreApi ? window.DragonBoatScoreApi.getGameCode() : "";
+            localStorage.setItem("dragonboatLastRankQuery", JSON.stringify({
+              ok: false,
+              gameCode,
+              source: "gateway",
+              message: error.message || "接口调用失败",
+              time: Date.now(),
+            }));
+            localStorage.setItem("dragonboatLastRankError", JSON.stringify({
+              gameCode,
+              message: error.message || "接口调用失败",
+              payload: error.payload || null,
+              time: Date.now(),
+            }));
+          } catch {
+            // 本地调试信息写入失败不影响排行榜兜底渲染。
+          }
+          renderScores({ scores: localScores().map(normalizeScore), me: normalizeScore(localLatestScore() || {}, 0), source: "local" });
+        }).finally(() => {
+          rankRefreshTask = null;
+        });
+        return rankRefreshTask;
+      }
+
+      window.addEventListener("message", (event) => {
+        if (event.data && event.data.type === "dragonboat:refreshLeaderboard") {
+          refreshScores();
+        }
+      });
+
+      refreshScores();
+    </script>
+  </body>
+</html>

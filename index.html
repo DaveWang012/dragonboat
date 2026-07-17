@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>端午龙舟冲刺赛</title>
+    <script>
+      (() => {
+        const appVersion = "20260618-rank-share";
+        const params = new URLSearchParams(window.location.search || "");
+        if (params.get("v") === appVersion) return;
+        params.set("v", appVersion);
+        window.location.replace(`${window.location.pathname}?${params.toString()}${window.location.hash || ""}`);
+      })();
+    </script>
+    <link rel="stylesheet" href="./laya.css?v=20260618-rank-share" />
+  </head>
+  <body>
+    <div id="laya-root">
+      <img class="game-bg" src="./assets/background.webp" alt="" />
+      <section class="game-hud" aria-label="游戏数据">
+        <span class="hud-hearts" aria-label="血量">
+          <img id="hudHeartA" src="./assets/ui/heart-full.png" alt="" />
+          <img id="hudHeartB" src="./assets/ui/heart-full.png" alt="" />
+        </span>
+        <div class="hud-score">
+          <span>得分</span>
+          <strong id="hudScore">0</strong>
+        </div>
+        <div class="hud-stats">
+          <span class="hud-stat">
+            <img src="./assets/ui/distance-icon.png" alt="" />
+            <strong id="hudDistance">0米</strong>
+          </span>
+          <span class="hud-stat">
+            <img src="./assets/ui/zongzi-icon.png" alt="" />
+            <strong id="hudZongzi">0</strong>
+          </span>
+        </div>
+      </section>
+      <button id="floatingLeaderboardBtn" class="floating-rank-button" type="button">排行榜</button>
+      <section id="startOverlay" class="prestart-overlay" aria-label="游戏开始弹窗">
+        <div class="prestart-dialog">
+          <p class="prestart-seal">安康</p>
+          <h1>赛龙舟</h1>
+          <p class="prestart-subtitle">控制龙舟方向，获得更高得分</p>
+          <div class="prestart-rules" aria-label="游戏规则">
+            <div class="rule-card">
+              <strong class="rule-title">收集粽子</strong>
+              <div class="rule-icons rule-icons-collect">
+                <img class="rule-icon rule-zongzi" src="./assets/zongzi.png" alt="普通粽子" />
+                <img class="rule-icon rule-zongzi" src="./assets/zongzi-gold.png" alt="金色粽子" />
+              </div>
+            </div>
+            <div class="rule-card">
+              <strong class="rule-title">躲避障碍物</strong>
+              <div class="rule-icons rule-icons-danger">
+                <img class="rule-icon rule-whirlpool" src="./assets/whirlpool.png" alt="漩涡" />
+                <img class="rule-icon rule-rock" src="./assets/rock.png" alt="礁石" />
+                <img class="rule-icon rule-log" src="./assets/log.png" alt="木桩" />
+              </div>
+            </div>
+          </div>
+          <div class="prestart-actions">
+            <button id="startGameBtn" class="prestart-button" type="button">开始游戏</button>
+            <div class="prestart-actions-row">
+              <button id="rulesBtn" class="result-secondary" type="button">游戏规则</button>
+              <button id="prizeBtn" class="result-secondary" type="button">奖品详情</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="resultOverlay" class="result-overlay is-hidden" aria-label="游戏结束弹窗">
+        <div class="result-dialog">
+          <p class="prestart-seal">战绩</p>
+          <p class="prestart-kicker">冲刺完成</p>
+          <h2>本局成绩</h2>
+          <div class="result-stats" aria-label="本局成绩">
+            <p><span>得分</span><strong id="resultScore">0</strong></p>
+            <p><span>距离</span><strong id="resultDistance">0米</strong></p>
+            <p><span>粽子</span><strong id="resultZongzi">0</strong></p>
+          </div>
+          <div class="result-actions">
+            <button id="restartGameBtn" class="prestart-button result-restart" type="button">再来一局</button>
+            <button id="leaderboardBtn" class="result-secondary" type="button">排行榜</button>
+            <button id="shareBtn" class="result-secondary" type="button">分享</button>
+          </div>
+        </div>
+      </section>
+      <section id="leaderboardOverlay" class="leaderboard-overlay is-hidden" aria-label="排行榜弹窗">
+        <div id="leaderboardLoading" class="leaderboard-loading" aria-live="polite">加载中...</div>
+        <iframe id="leaderboardFrame" class="leaderboard-frame" title="排行榜"></iframe>
+      </section>
+      <section id="rulesOverlay" class="rules-overlay is-hidden" aria-label="游戏规则声明页">
+        <div class="rules-dialog">
+          <h2>游戏规则</h2>
+          <div class="rules-content">
+            <div class="rules-section">
+              <h3>计分规则</h3>
+              <p class="rules-formula">总分=行驶距离得分+收集粽子得分</p>
+              <div class="rules-box">
+                <p class="rules-desc">行驶得分：每秒约6-13分，距离越远得分越高</p>
+                <p class="rules-desc">收集粽子：普通粽子+30分，金色粽子+60分</p>
+              </div>
+            </div>
+            <div class="rules-section">
+              <h3>障碍物</h3>
+              <div class="rules-box">
+                <p class="rules-desc">障碍物碰撞后会扣减生命值</p>
+                <p class="rules-desc">单次碰撞扣减1点生命值，生命值清零游戏结束</p>
+              </div>
+            </div>
+            <div class="rules-section rules-prize">
+              <h3>奖品详情</h3>
+              <div class="rules-box">
+                <div class="rules-prize-list">
+                  <p><span>每日榜单前1-5名</span><strong>京东Plus卡</strong></p>
+                  <p><span>每日榜单前6-10名</span><strong>天弘基金联名保温杯</strong></p>
+                  <p><span>每日榜单前11-15名</span><strong>天弘基金联名雨伞</strong></p>
+                </div>
+                <p class="rules-desc rules-prize-tip">请您及时关注<a class="rules-link" href="https://roma.jd.com/content/personal?contentId=jimu_user_info-4597013" target="_top">直播&amp;线下活动小助手</a>每日发布的获奖名单，及时联系小助手兑奖。</p>
+              </div>
+            </div>
+            <div class="rules-section rules-notice">
+              <h3>注意事项</h3>
+              <div class="rules-box">
+                <div class="rules-notice-list">
+                  <p class="rules-desc">1、参与者须登录京东金融账号方可参与活动，未登录账号的游戏积分不予统计，无获奖资格；游戏排行榜仅展示社区总分前50名用户数据，每日22点统一统计当日积分榜单，当日获奖名单以京东金融小助手留存的榜单截图为唯一判定依据。</p>
+                  <p class="rules-desc">2、每日榜单设置15个获奖名额，同一京东账户本次活动仅限获奖一次，领取任意档位奖励后将不再参与后续榜单排名；若已获奖账户再次跻身榜单前十五，对应名次自动顺延至下一位未获奖用户。</p>
+                  <p class="rules-desc">3、获奖名单将由社区小助手统一公示，奖品在登记后发放，获奖用户需在有效期内主动联系小助手填报收货地址，逾期未提交地址视为自动放弃奖项，不予补发；所有奖品将在活动结束后7个工作日内寄出。</p>
+                  <p class="rules-desc">4、严禁使用脚本、批量注册多账号、恶意刷积分等作弊方式套取奖励，一经查实，主办方有权取消其全部获奖资格、追回已发奖品，并限制该账户参与平台后续所有营销活动。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button id="rulesCloseBtn" class="prestart-button" type="button">我知道了</button>
+        </div>
+      </section>
+      <section id="prizeOverlay" class="rules-overlay prize-overlay is-hidden" aria-label="奖品详情弹窗">
+        <div class="rules-dialog">
+          <h2>奖品详情</h2>
+          <div class="rules-content">
+            <div class="rules-section rules-prize">
+              <div class="rules-box">
+                <div class="rules-prize-list">
+                  <p><span>每日榜单前1-5名</span><strong>京东Plus卡</strong></p>
+                  <p><span>每日榜单前6-10名</span><strong>天弘基金联名保温杯</strong></p>
+                  <p><span>每日榜单前11-15名</span><strong>天弘基金联名雨伞</strong></p>
+                </div>
+                <p class="rules-desc rules-prize-tip">请您及时关注<a class="rules-link" href="https://roma.jd.com/content/personal?contentId=jimu_user_info-4597013" target="_top">直播&amp;线下活动小助手</a>每日发布的获奖名单，及时联系小助手兑奖。</p>
+              </div>
+            </div>
+          </div>
+          <button id="prizeCloseBtn" class="prestart-button" type="button">我知道了</button>
+        </div>
+      </section>
+    </div>
+    <audio id="gameBgm" src="./assets/audio/dragonfoot-lullaby.mp3" preload="auto" loop></audio>
+    <audio id="rewardSfx" src="./assets/audio/reward.wav" preload="auto"></audio>
+    <audio id="collisionSfx" src="./assets/audio/collision.wav" preload="auto"></audio>
+    <script src="https://jrb.jr.jd.com/common/jssdk/jrbridge/3.0.1/jrbridge.js"></script>
+    <script src="./libs/laya.core.js"></script>
+    <script src="./game-api.js?v=20260618-rank-share"></script>
+    <script src="./laya-game.js?v=20260618-rank-share"></script>
+  </body>
+</html>
