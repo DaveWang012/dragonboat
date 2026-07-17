@@ -9,14 +9,14 @@
     <title>端午龙舟冲刺赛</title>
     <script>
       (() => {
-        const appVersion = "20260717-notice-fallback";
+        const appVersion = "20260717-start-notice";
         const params = new URLSearchParams(window.location.search || "");
         if (params.get("v") === appVersion) return;
         params.set("v", appVersion);
         window.location.replace(`${window.location.pathname}?${params.toString()}${window.location.hash || ""}`);
       })();
     </script>
-    <link rel="stylesheet" href="./laya.css?v=20260717-notice-fallback" />
+    <link rel="stylesheet" href="./laya.css?v=20260717-start-notice" />
   </head>
   <body>
     <div id="laya-root">
@@ -199,7 +199,7 @@
     <audio id="rewardSfx" data-src="./assets/audio/reward.wav" preload="none"></audio>
     <audio id="collisionSfx" data-src="./assets/audio/collision.wav" preload="none"></audio>
     <script src="./libs/laya.core.js"></script>
-    <script src="./game-api.js?v=20260717-notice-fallback"></script>
-    <script src="./laya-game.js?v=20260717-notice-fallback"></script>
+    <script src="./game-api.js?v=20260717-start-notice"></script>
+    <script src="./laya-game.js?v=20260717-start-notice"></script>
   </body>
 </html>

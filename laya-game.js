@@ -6,7 +6,7 @@
   const laneOffsets = [-1, 0, 1];
   const laneBoundaryOffsets = [-1.5, -0.5, 0.5, 1.5];
   const keyMap = new Map();
-  const APP_VERSION = "20260717-notice-fallback";
+  const APP_VERSION = "20260717-start-notice";
   const ACTIVITY_SHARE_URL = `https://show.jd.com/n/QwMWVE53XAodKr0x/?pageKey=QwMWVE53XAodKr0x&v=${APP_VERSION}`;
   const SHARE_THUMB_URL = "https://m.360buyimg.com/babel/jfs/t16171/127/2505983508/7852/4cfd7bdf/5abc8954N23307760.png";
   const LEADERBOARD_VERSION = APP_VERSION;
@@ -146,12 +146,15 @@
   let pageHidden = document.hidden;
   let resumeBgmOnVisible = false;
   let boatGifLoaded = false;
+  let noticeAutoStartTimer = 0;
+  let noticeAutoStartDeadline = 0;
+  let noticeLaunchPending = false;
 
   state.items = createOpeningItems();
   state.x = playerLaneX(1);
   updateUi();
 
-  if (startGameBtn) startGameBtn.addEventListener("click", resetGame);
+  if (startGameBtn) startGameBtn.addEventListener("click", openStartNotice);
   if (restartGameBtn) restartGameBtn.addEventListener("click", resetGame);
   if (leaderboardBtn) leaderboardBtn.addEventListener("click", openLeaderboardOverlay);
   if (floatingLeaderboardBtn) {
@@ -668,8 +671,20 @@
     modeBeforeRules = "";
   }
 
+  function openStartNotice() {
+    if (!noticeOverlay) {
+      resetGame();
+      return;
+    }
+    openNoticeOverlay({ launchGame: true });
+  }
+
   function openNoticeOverlay() {
+    const options = arguments[0] || {};
     if (!noticeOverlay) return;
+    clearNoticeAutoStart();
+    noticeLaunchPending = Boolean(options.launchGame);
+    if (noticeCloseBtn) noticeCloseBtn.textContent = noticeLaunchPending ? "开始游戏（3秒）" : "我知道了";
     if (noticeOfficialBoat && !noticeOfficialBoat.getAttribute("src")) {
       const src = noticeOfficialBoat.dataset.src;
       if (src) noticeOfficialBoat.setAttribute("src", src);
@@ -685,17 +700,52 @@
       }
     }
     noticeOverlay.classList.remove("is-hidden");
+    if (noticeLaunchPending) beginNoticeAutoStart();
   }
 
   function closeNoticeOverlay() {
     if (!noticeOverlay) return;
+    const shouldStartGame = noticeLaunchPending;
+    clearNoticeAutoStart();
+    noticeLaunchPending = false;
     noticeOverlay.classList.add("is-hidden");
+    if (noticeCloseBtn) noticeCloseBtn.textContent = "我知道了";
+    if (shouldStartGame) {
+      resetGame();
+      modeBeforeNotice = "";
+      return;
+    }
     const rulesStillOpen = rulesOverlay && !rulesOverlay.classList.contains("is-hidden");
     if (!rulesStillOpen && state.mode === "paused" && (modeBeforeNotice === "playing" || modeBeforeNotice === "intro")) {
       state.mode = modeBeforeNotice;
       updateUi();
     }
     modeBeforeNotice = "";
+  }
+
+  function beginNoticeAutoStart() {
+    noticeAutoStartDeadline = performance.now() + 3000;
+    updateNoticeAutoStartButton();
+    noticeAutoStartTimer = window.setInterval(() => {
+      if (!noticeLaunchPending) {
+        clearNoticeAutoStart();
+        return;
+      }
+      updateNoticeAutoStartButton();
+      if (performance.now() >= noticeAutoStartDeadline) closeNoticeOverlay();
+    }, 250);
+  }
+
+  function updateNoticeAutoStartButton() {
+    if (!noticeCloseBtn || !noticeLaunchPending) return;
+    const seconds = Math.max(0, Math.ceil((noticeAutoStartDeadline - performance.now()) / 1000));
+    noticeCloseBtn.textContent = seconds > 0 ? `开始游戏（${seconds}秒）` : "开始游戏";
+  }
+
+  function clearNoticeAutoStart() {
+    if (!noticeAutoStartTimer) return;
+    clearInterval(noticeAutoStartTimer);
+    noticeAutoStartTimer = 0;
   }
 
   let modeBeforePrize = "";
