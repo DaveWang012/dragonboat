@@ -6,7 +6,7 @@
   const laneOffsets = [-1, 0, 1];
   const laneBoundaryOffsets = [-1.5, -0.5, 0.5, 1.5];
   const keyMap = new Map();
-  const APP_VERSION = "20260619-perf-tune";
+  const APP_VERSION = "20260717-speed-tune";
   const ACTIVITY_SHARE_URL = `https://show.jd.com/n/QwMWVE53XAodKr0x/?pageKey=QwMWVE53XAodKr0x&v=${APP_VERSION}`;
   const SHARE_THUMB_URL = "https://m.360buyimg.com/babel/jfs/t16171/127/2505983508/7852/4cfd7bdf/5abc8954N23307760.png";
   const LEADERBOARD_VERSION = APP_VERSION;
@@ -116,12 +116,11 @@
   };
   if (root && Laya.Browser.container) root.appendChild(Laya.Browser.container);
   if (root) {
-    root.addEventListener("pointerdown", startBgm, true);
     bindNativeControls(root);
   }
-  const laneBuoys = createLaneBuoys();
-  const wakeGif = createWakeGif();
-  const boatGif = createBoatGif();
+  let laneBuoys = [];
+  let wakeGif = null;
+  let boatGif = null;
 
   const scene = new Laya.Sprite();
   Laya.stage.addChild(scene);
@@ -174,9 +173,6 @@
       leaderboardLoading.classList.add("is-hidden");
     });
   }
-  document.addEventListener("pointerdown", startBgm, true);
-  document.addEventListener("touchstart", startBgm, true);
-  document.addEventListener("click", startBgm, true);
   document.addEventListener("keydown", onKeyDown);
   document.addEventListener("keyup", onKeyUp);
   document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -273,6 +269,7 @@
 
   function startBgm() {
     if (!gameBgm) return;
+    ensureAudioSource(gameBgm);
     gameBgm.loop = true;
     gameBgm.volume = GAME_AUDIO_VOLUME;
     if (!gameBgm.paused) return;
@@ -283,6 +280,7 @@
 
   function playRewardSfx() {
     if (!rewardSfx) return;
+    ensureAudioSource(rewardSfx);
     rewardSfx.volume = GAME_AUDIO_VOLUME;
     rewardSfx.currentTime = 0;
     rewardSfx.play().catch(() => {
@@ -292,11 +290,18 @@
 
   function playCollisionSfx() {
     if (!collisionSfx) return;
+    ensureAudioSource(collisionSfx);
     collisionSfx.volume = GAME_AUDIO_VOLUME;
     collisionSfx.currentTime = 0;
     collisionSfx.play().catch(() => {
       // Sound effects also depend on the browser's audio gesture policy.
     });
+  }
+
+  function ensureAudioSource(audio) {
+    if (!audio || audio.getAttribute("src")) return;
+    const src = audio.dataset.src;
+    if (src) audio.setAttribute("src", src);
   }
 
   function depthAt(y) {
@@ -406,6 +411,7 @@
 
   function resetGame() {
     startBgm();
+    ensureMotionAssets();
     Object.assign(state, {
       mode: "playing",
       lane: 1,
@@ -437,6 +443,12 @@
     if (resultOverlay) resultOverlay.classList.add("is-hidden");
     beginOpeningAnimation();
     updateUi();
+  }
+
+  function ensureMotionAssets() {
+    if (!laneBuoys.length) laneBuoys = createLaneBuoys();
+    if (!wakeGif) wakeGif = createWakeGif();
+    if (!boatGif) boatGif = createBoatGif();
   }
 
   function beginOpeningAnimation() {
@@ -690,6 +702,13 @@
         return;
       }
 
+      if (!isJdRuntime()) {
+        resolve(null);
+        return;
+      }
+
+      loadJrBridgeScript();
+
       const startedAt = Date.now();
       const timer = setInterval(() => {
         const bridge = getJrBridge();
@@ -699,6 +718,25 @@
         }
       }, 60);
     });
+  }
+
+  function isJdRuntime() {
+    return /(^|\.)jd\.com$/i.test(window.location.hostname) || /(^|\.)jr\.jd\.com$/i.test(window.location.hostname);
+  }
+
+  let jrBridgeScriptPromise = null;
+  function loadJrBridgeScript() {
+    if (getJrBridge()) return Promise.resolve();
+    if (jrBridgeScriptPromise) return jrBridgeScriptPromise;
+    jrBridgeScriptPromise = new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://jrb.jr.jd.com/common/jssdk/jrbridge/3.0.1/jrbridge.js";
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => resolve();
+      document.head.appendChild(script);
+    });
+    return jrBridgeScriptPromise;
   }
 
   async function callJrBridgeShare(text, jrBridge) {
