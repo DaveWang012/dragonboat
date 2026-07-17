@@ -6,7 +6,7 @@
   const laneOffsets = [-1, 0, 1];
   const laneBoundaryOffsets = [-1.5, -0.5, 0.5, 1.5];
   const keyMap = new Map();
-  const APP_VERSION = "20260717-start-notice";
+  const APP_VERSION = "20260717-static-boat-notice";
   const ACTIVITY_SHARE_URL = `https://show.jd.com/n/QwMWVE53XAodKr0x/?pageKey=QwMWVE53XAodKr0x&v=${APP_VERSION}`;
   const SHARE_THUMB_URL = "https://m.360buyimg.com/babel/jfs/t16171/127/2505983508/7852/4cfd7bdf/5abc8954N23307760.png";
   const LEADERBOARD_VERSION = APP_VERSION;
@@ -104,6 +104,7 @@
   const noticeFromRulesBtn = document.getElementById("noticeFromRulesBtn");
   const floatingNoticeBtn = document.getElementById("floatingNoticeBtn");
   const noticeCloseBtn = document.getElementById("noticeCloseBtn");
+  const noticeFallbackBoat = document.getElementById("noticeFallbackBoat");
   const noticeOfficialBoat = document.getElementById("noticeOfficialBoat");
   const gameBgm = document.getElementById("gameBgm");
   const rewardSfx = document.getElementById("rewardSfx");
@@ -685,6 +686,10 @@
     clearNoticeAutoStart();
     noticeLaunchPending = Boolean(options.launchGame);
     if (noticeCloseBtn) noticeCloseBtn.textContent = noticeLaunchPending ? "开始游戏（3秒）" : "我知道了";
+    if (noticeFallbackBoat && !noticeFallbackBoat.getAttribute("src")) {
+      const src = noticeFallbackBoat.dataset.src;
+      if (src) noticeFallbackBoat.setAttribute("src", src);
+    }
     if (noticeOfficialBoat && !noticeOfficialBoat.getAttribute("src")) {
       const src = noticeOfficialBoat.dataset.src;
       if (src) noticeOfficialBoat.setAttribute("src", src);
@@ -1257,27 +1262,11 @@
     if (boatGifLoaded) return;
     const scale = state.mode === "over" ? 0.86 : 1;
     const shake = state.mode === "playing" && state.hitShake > 0 ? Math.sin(performance.now() * 0.07) * 7 * (state.hitShake / 0.38) : 0;
-    const x = state.x + shake;
-    const y = 626;
-    drawShadow(g, x, y + 36 * scale, 48 * scale, 14 * scale, 0.24);
-    g.drawPoly(0, 0, [
-      x - 46 * scale, y - 86 * scale,
-      x + 46 * scale, y - 86 * scale,
-      x + 35 * scale, y + 64 * scale,
-      x + 12 * scale, y + 86 * scale,
-      x - 12 * scale, y + 86 * scale,
-      x - 35 * scale, y + 64 * scale,
-    ], "#8b3e20", "#4a2114", 3 * scale);
-    g.drawPoly(0, 0, [
-      x - 34 * scale, y - 72 * scale,
-      x + 34 * scale, y - 72 * scale,
-      x + 24 * scale, y + 50 * scale,
-      x - 24 * scale, y + 50 * scale,
-    ], "#c87131", "#ffd785", 2 * scale);
-    g.drawRect(x - 30 * scale, y - 34 * scale, 60 * scale, 12 * scale, "#7c351d");
-    g.drawRect(x - 25 * scale, y + 14 * scale, 50 * scale, 12 * scale, "#7c351d");
-    g.drawCircle(x, y - 88 * scale, 15 * scale, "#f0c85f", "#77331c", 3 * scale);
-    g.drawCircle(x, y - 88 * scale, 7 * scale, "#fff0ad");
+    const width = 180 * scale;
+    const height = 264 * scale;
+    const x = state.x - width / 2 + shake;
+    const y = 448 + (1 - scale) * 80;
+    g.loadImage("./assets/boat-rowing-static.png", x, y, width, height);
   }
 
   function drawOpeningAnimation(g) {

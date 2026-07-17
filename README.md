@@ -36,11 +36,11 @@
 
 **实现位置**：`index.html`、`game-api.js`、`laya-game.js`
 
-当前代码使用统一版本号 `20260717-start-notice`，用于规避 App WebView / CDN 缓存：
+当前代码使用统一版本号 `20260717-static-boat-notice`，用于规避 App WebView / CDN 缓存：
 
-- `index.html` 首屏脚本会检查 URL 中的 `v` 参数，若不是当前版本，会自动 `location.replace()` 到同一路径并补齐 `v=20260717-start-notice`。
+- `index.html` 首屏脚本会检查 URL 中的 `v` 参数，若不是当前版本，会自动 `location.replace()` 到同一路径并补齐 `v=20260717-static-boat-notice`。
 - `laya.css`、`game-api.js`、`laya-game.js` 均带同一版本号 query。
-- 排行榜 iframe 使用 `LEADERBOARD_VERSION = APP_VERSION`，会打开 `leaderboard.html?v=20260717-start-notice&embedded=1`。
+- 排行榜 iframe 使用 `LEADERBOARD_VERSION = APP_VERSION`，会打开 `leaderboard.html?v=20260717-static-boat-notice&embedded=1`。
 - 分享链接和登录 `returnurl` 也带同一版本号。
 
 > 注意：该逻辑只有在用户加载到新版 `index.html` 后才生效。若 App/CDN 已缓存更旧的 `index.html`，仍需平台侧刷新页面缓存一次。
@@ -512,6 +512,6 @@ const itemHitboxes = {
 | 项目 | 值 |
 |------|-----|
 | GameCode 规则 | `2026-06-18` 使用 `dragonboat_h5_202606`，之后按北京时间生成 `dragonboat_h5_YYYYMMDD` |
-| 活动页 URL | `https://show.jd.com/n/QwMWVE53XAodKr0x/?pageKey=QwMWVE53XAodKr0x&v=20260717-start-notice` |
+| 活动页 URL | `https://show.jd.com/n/QwMWVE53XAodKr0x/?pageKey=QwMWVE53XAodKr0x&v=20260717-static-boat-notice` |
 | 分享缩略图 | `https://m.360buyimg.com/babel/jfs/t16171/127/2505983508/7852/4cfd7bdf/5abc8954N23307760.png` |
-| 当前 JS/CSS 版本号 | `20260717-start-notice` |
+| 当前 JS/CSS 版本号 | `20260717-static-boat-notice` |
