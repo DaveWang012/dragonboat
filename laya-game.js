@@ -6,7 +6,7 @@
   const laneOffsets = [-1, 0, 1];
   const laneBoundaryOffsets = [-1.5, -0.5, 0.5, 1.5];
   const keyMap = new Map();
-  const APP_VERSION = "20260717-boat-fallback";
+  const APP_VERSION = "20260717-notice-fallback";
   const ACTIVITY_SHARE_URL = `https://show.jd.com/n/QwMWVE53XAodKr0x/?pageKey=QwMWVE53XAodKr0x&v=${APP_VERSION}`;
   const SHARE_THUMB_URL = "https://m.360buyimg.com/babel/jfs/t16171/127/2505983508/7852/4cfd7bdf/5abc8954N23307760.png";
   const LEADERBOARD_VERSION = APP_VERSION;
@@ -99,6 +99,12 @@
   const prizeOverlay = document.getElementById("prizeOverlay");
   const prizeBtn = document.getElementById("prizeBtn");
   const prizeCloseBtn = document.getElementById("prizeCloseBtn");
+  const noticeOverlay = document.getElementById("noticeOverlay");
+  const noticeBtn = document.getElementById("noticeBtn");
+  const noticeFromRulesBtn = document.getElementById("noticeFromRulesBtn");
+  const floatingNoticeBtn = document.getElementById("floatingNoticeBtn");
+  const noticeCloseBtn = document.getElementById("noticeCloseBtn");
+  const noticeOfficialBoat = document.getElementById("noticeOfficialBoat");
   const gameBgm = document.getElementById("gameBgm");
   const rewardSfx = document.getElementById("rewardSfx");
   const collisionSfx = document.getElementById("collisionSfx");
@@ -156,9 +162,20 @@
       openLeaderboardOverlay();
     });
   }
+  if (floatingNoticeBtn) {
+    floatingNoticeBtn.addEventListener("pointerdown", stopGameInput);
+    floatingNoticeBtn.addEventListener("touchstart", stopGameInput, { passive: true });
+    floatingNoticeBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      openNoticeOverlay();
+    });
+  }
   if (shareBtn) shareBtn.addEventListener("click", shareResult);
   bindReliableTap(rulesBtn, openRulesOverlay);
   bindReliableTap(rulesCloseBtn, closeRulesOverlay);
+  bindReliableTap(noticeBtn, openNoticeOverlay);
+  bindReliableTap(noticeFromRulesBtn, openNoticeOverlay);
+  bindReliableTap(noticeCloseBtn, closeNoticeOverlay);
   if (prizeBtn) bindReliableTap(prizeBtn, openPrizeOverlay);
   if (prizeCloseBtn) bindReliableTap(prizeCloseBtn, closePrizeOverlay);
   window.addEventListener("message", (event) => {
@@ -580,6 +597,7 @@
 
   let modeBeforeLeaderboard = "";
   let modeBeforeRules = "";
+  let modeBeforeNotice = "";
 
   function openLeaderboardOverlay() {
     if (!leaderboardOverlay || !leaderboardFrame) {
@@ -648,6 +666,36 @@
       updateUi();
     }
     modeBeforeRules = "";
+  }
+
+  function openNoticeOverlay() {
+    if (!noticeOverlay) return;
+    if (noticeOfficialBoat && !noticeOfficialBoat.getAttribute("src")) {
+      const src = noticeOfficialBoat.dataset.src;
+      if (src) noticeOfficialBoat.setAttribute("src", src);
+    }
+    if (noticeOverlay.classList.contains("is-hidden")) {
+      modeBeforeNotice = state.mode;
+      if (state.mode === "playing" || state.mode === "intro") {
+        state.mode = "paused";
+        state.heldDirection = 0;
+        state.pointerActive = false;
+        state.dragControl = false;
+        updateUi();
+      }
+    }
+    noticeOverlay.classList.remove("is-hidden");
+  }
+
+  function closeNoticeOverlay() {
+    if (!noticeOverlay) return;
+    noticeOverlay.classList.add("is-hidden");
+    const rulesStillOpen = rulesOverlay && !rulesOverlay.classList.contains("is-hidden");
+    if (!rulesStillOpen && state.mode === "paused" && (modeBeforeNotice === "playing" || modeBeforeNotice === "intro")) {
+      state.mode = modeBeforeNotice;
+      updateUi();
+    }
+    modeBeforeNotice = "";
   }
 
   let modeBeforePrize = "";
@@ -1156,6 +1204,7 @@
 
   function drawBoatFallback(g) {
     if (state.mode === "ready") return;
+    if (boatGifLoaded) return;
     const scale = state.mode === "over" ? 0.86 : 1;
     const shake = state.mode === "playing" && state.hitShake > 0 ? Math.sin(performance.now() * 0.07) * 7 * (state.hitShake / 0.38) : 0;
     const x = state.x + shake;

@@ -9,14 +9,14 @@
     <title>端午龙舟冲刺赛</title>
     <script>
       (() => {
-        const appVersion = "20260717-boat-fallback";
+        const appVersion = "20260717-notice-fallback";
         const params = new URLSearchParams(window.location.search || "");
         if (params.get("v") === appVersion) return;
         params.set("v", appVersion);
         window.location.replace(`${window.location.pathname}?${params.toString()}${window.location.hash || ""}`);
       })();
     </script>
-    <link rel="stylesheet" href="./laya.css?v=20260717-boat-fallback" />
+    <link rel="stylesheet" href="./laya.css?v=20260717-notice-fallback" />
   </head>
   <body>
     <div id="laya-root">
@@ -42,6 +42,7 @@
         </div>
       </section>
       <button id="floatingLeaderboardBtn" class="floating-rank-button" type="button">排行榜</button>
+      <button id="floatingNoticeBtn" class="floating-notice-button" type="button">须知</button>
       <section id="startOverlay" class="prestart-overlay" aria-label="游戏开始弹窗">
         <div class="prestart-dialog">
           <p class="prestart-seal">安康</p>
@@ -68,6 +69,7 @@
             <button id="startGameBtn" class="prestart-button" type="button">开始游戏</button>
             <div class="prestart-actions-row">
               <button id="rulesBtn" class="result-secondary" type="button">游戏规则</button>
+              <button id="noticeBtn" class="result-secondary" type="button">素材须知</button>
               <button id="prizeBtn" class="result-secondary" type="button">奖品详情</button>
             </div>
           </div>
@@ -111,6 +113,13 @@
               <div class="rules-box">
                 <p class="rules-desc">障碍物碰撞后会扣减生命值</p>
                 <p class="rules-desc">单次碰撞扣减1点生命值，生命值清零游戏结束</p>
+              </div>
+            </div>
+            <div class="rules-section">
+              <h3>素材加载须知</h3>
+              <div class="rules-box">
+                <p class="rules-desc">当前页面通过 GitHub Pages 部署，手机网络环境下部分高清素材可能加载较慢。正式龙舟动画加载完成前，游戏会先显示简易龙舟，加载完成后自动切换为正式龙舟。</p>
+                <button id="noticeFromRulesBtn" class="result-secondary notice-inline-button" type="button">查看龙舟示意</button>
               </div>
             </div>
             <div class="rules-section rules-prize">
@@ -157,12 +166,40 @@
           <button id="prizeCloseBtn" class="prestart-button" type="button">我知道了</button>
         </div>
       </section>
+      <section id="noticeOverlay" class="rules-overlay notice-overlay is-hidden" aria-label="素材加载须知弹窗">
+        <div class="rules-dialog notice-dialog">
+          <h2>素材加载须知</h2>
+          <div class="rules-content">
+            <div class="rules-section">
+              <div class="rules-box">
+                <p class="rules-desc">因为本版本部署在 GitHub Pages，部分手机或微信内置浏览器加载高清素材时可能会比较慢。为避免影响游玩，正式龙舟动画未加载完成前，会先显示简易龙舟；正式动画加载成功后，简易龙舟会自动消失。</p>
+              </div>
+            </div>
+            <div class="notice-boat-grid" aria-label="龙舟素材示意">
+              <figure class="notice-boat-card">
+                <div class="notice-fallback-boat" aria-hidden="true">
+                  <span class="fallback-head"></span>
+                  <span class="fallback-body"></span>
+                  <span class="fallback-seat fallback-seat-a"></span>
+                  <span class="fallback-seat fallback-seat-b"></span>
+                </div>
+                <figcaption>简易兜底龙舟</figcaption>
+              </figure>
+              <figure class="notice-boat-card">
+                <img id="noticeOfficialBoat" data-src="./assets/boat-rowing-new.webp" alt="正式高清龙舟" />
+                <figcaption>正式高清龙舟</figcaption>
+              </figure>
+            </div>
+          </div>
+          <button id="noticeCloseBtn" class="prestart-button" type="button">我知道了</button>
+        </div>
+      </section>
     </div>
     <audio id="gameBgm" data-src="./assets/audio/dragonfoot-lullaby.mp3" preload="none" loop></audio>
     <audio id="rewardSfx" data-src="./assets/audio/reward.wav" preload="none"></audio>
     <audio id="collisionSfx" data-src="./assets/audio/collision.wav" preload="none"></audio>
     <script src="./libs/laya.core.js"></script>
-    <script src="./game-api.js?v=20260717-boat-fallback"></script>
-    <script src="./laya-game.js?v=20260717-boat-fallback"></script>
+    <script src="./game-api.js?v=20260717-notice-fallback"></script>
+    <script src="./laya-game.js?v=20260717-notice-fallback"></script>
   </body>
 </html>

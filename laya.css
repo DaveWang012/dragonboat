@@ -234,9 +234,9 @@ body {
   width: 44px;
 }
 
-.floating-rank-button {
+.floating-rank-button,
+.floating-notice-button {
   position: absolute;
-  top: max(10px, env(safe-area-inset-top));
   left: max(8px, calc((100% - 100vw) / 2 + 8px));
   z-index: 24;
   min-width: 64px;
@@ -253,6 +253,16 @@ body {
   box-shadow: inset 0 0 0 2px #ffd740;
   pointer-events: auto;
   touch-action: manipulation;
+}
+
+.floating-rank-button {
+  top: max(10px, env(safe-area-inset-top));
+}
+
+.floating-notice-button {
+  top: max(46px, calc(env(safe-area-inset-top) + 46px));
+  color: #cffff1;
+  box-shadow: inset 0 0 0 2px rgba(207, 255, 241, 0.78);
 }
 
 .hud-hearts {
@@ -816,8 +826,126 @@ body {
 .prestart-actions-row .result-secondary {
   flex: 1;
   min-height: 42px;
+  padding: 0 8px;
   max-width: none;
   white-space: nowrap;
+}
+
+.notice-inline-button {
+  justify-self: start;
+  min-width: 132px;
+}
+
+.notice-dialog {
+  height: auto;
+  max-height: min(600px, calc(100dvh - 36px));
+}
+
+.notice-boat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.notice-boat-card {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 8px 10px;
+  border: 1px solid rgba(255, 226, 126, 0.42);
+  border-radius: 18px;
+  background: rgba(3, 46, 43, 0.54);
+}
+
+.notice-boat-card img {
+  display: block;
+  width: 100%;
+  max-width: 118px;
+  aspect-ratio: 180 / 264;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 12px rgba(0, 20, 18, 0.34));
+}
+
+.notice-boat-card figcaption {
+  color: #ffe69e;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.notice-fallback-boat {
+  position: relative;
+  width: min(100%, 118px);
+  aspect-ratio: 180 / 264;
+  filter: drop-shadow(0 10px 12px rgba(0, 20, 18, 0.34));
+}
+
+.notice-fallback-boat::before {
+  content: "";
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  top: 18%;
+  bottom: 8%;
+  border: 2px solid #4a2114;
+  border-radius: 34% 34% 24% 24% / 18% 18% 14% 14%;
+  background: linear-gradient(180deg, #c87131 0%, #8b3e20 100%);
+  clip-path: polygon(0 0, 100% 0, 82% 85%, 58% 100%, 42% 100%, 18% 85%);
+}
+
+.notice-fallback-boat::after {
+  content: "";
+  position: absolute;
+  left: 33%;
+  right: 33%;
+  top: 22%;
+  bottom: 22%;
+  border-radius: 999px;
+  background: rgba(255, 215, 133, 0.72);
+}
+
+.fallback-head {
+  position: absolute;
+  left: 41%;
+  top: 11%;
+  width: 18%;
+  aspect-ratio: 1;
+  z-index: 2;
+  border: 2px solid #77331c;
+  border-radius: 50%;
+  background: radial-gradient(circle at 42% 38%, #fff0ad 0 34%, #f0c85f 36% 100%);
+}
+
+.fallback-body {
+  position: absolute;
+  left: 34%;
+  right: 34%;
+  top: 39%;
+  height: 10%;
+  z-index: 2;
+  border-radius: 999px;
+  background: #7c351d;
+}
+
+.fallback-seat {
+  position: absolute;
+  left: 36%;
+  right: 36%;
+  z-index: 2;
+  height: 8%;
+  border-radius: 999px;
+  background: #7c351d;
+}
+
+.fallback-seat-a {
+  top: 54%;
+}
+
+.fallback-seat-b {
+  top: 68%;
 }
 
 .boat-gif {
