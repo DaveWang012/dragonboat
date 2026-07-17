@@ -6,7 +6,7 @@
   const laneOffsets = [-1, 0, 1];
   const laneBoundaryOffsets = [-1.5, -0.5, 0.5, 1.5];
   const keyMap = new Map();
-  const APP_VERSION = "20260717-speed-tune";
+  const APP_VERSION = "20260717-boat-fallback";
   const ACTIVITY_SHARE_URL = `https://show.jd.com/n/QwMWVE53XAodKr0x/?pageKey=QwMWVE53XAodKr0x&v=${APP_VERSION}`;
   const SHARE_THUMB_URL = "https://m.360buyimg.com/babel/jfs/t16171/127/2505983508/7852/4cfd7bdf/5abc8954N23307760.png";
   const LEADERBOARD_VERSION = APP_VERSION;
@@ -139,6 +139,7 @@
   let lastStaticRenderMode = "";
   let pageHidden = document.hidden;
   let resumeBgmOnVisible = false;
+  let boatGifLoaded = false;
 
   state.items = createOpeningItems();
   state.x = playerLaneX(1);
@@ -1022,6 +1023,7 @@
     g.clear();
     state.items.sort((a, b) => a.y - b.y).forEach((item) => drawItem(g, item));
     drawParticles(g);
+    drawBoatFallback(g);
     if (state.mode === "intro") drawOpeningAnimation(g);
     if (state.mode === "paused") {
       g.drawRect(0, 0, W, H, "rgba(0,28,28,0.42)");
@@ -1034,6 +1036,15 @@
     if (!root) return null;
     const img = document.createElement("img");
     img.className = "boat-gif";
+    img.decoding = "async";
+    img.onload = () => {
+      boatGifLoaded = true;
+      lastStaticRenderMode = "";
+    };
+    img.onerror = () => {
+      boatGifLoaded = false;
+      lastStaticRenderMode = "";
+    };
     img.src = "./assets/boat-rowing-new.webp";
     img.alt = "";
     root.appendChild(img);
@@ -1141,6 +1152,33 @@
       renderedBoatDuration = nextDuration;
       boatGif.style.setProperty("--boat-row-duration", nextDuration);
     }
+  }
+
+  function drawBoatFallback(g) {
+    if (state.mode === "ready") return;
+    const scale = state.mode === "over" ? 0.86 : 1;
+    const shake = state.mode === "playing" && state.hitShake > 0 ? Math.sin(performance.now() * 0.07) * 7 * (state.hitShake / 0.38) : 0;
+    const x = state.x + shake;
+    const y = 626;
+    drawShadow(g, x, y + 36 * scale, 48 * scale, 14 * scale, 0.24);
+    g.drawPoly(0, 0, [
+      x - 46 * scale, y - 86 * scale,
+      x + 46 * scale, y - 86 * scale,
+      x + 35 * scale, y + 64 * scale,
+      x + 12 * scale, y + 86 * scale,
+      x - 12 * scale, y + 86 * scale,
+      x - 35 * scale, y + 64 * scale,
+    ], "#8b3e20", "#4a2114", 3 * scale);
+    g.drawPoly(0, 0, [
+      x - 34 * scale, y - 72 * scale,
+      x + 34 * scale, y - 72 * scale,
+      x + 24 * scale, y + 50 * scale,
+      x - 24 * scale, y + 50 * scale,
+    ], "#c87131", "#ffd785", 2 * scale);
+    g.drawRect(x - 30 * scale, y - 34 * scale, 60 * scale, 12 * scale, "#7c351d");
+    g.drawRect(x - 25 * scale, y + 14 * scale, 50 * scale, 12 * scale, "#7c351d");
+    g.drawCircle(x, y - 88 * scale, 15 * scale, "#f0c85f", "#77331c", 3 * scale);
+    g.drawCircle(x, y - 88 * scale, 7 * scale, "#fff0ad");
   }
 
   function drawOpeningAnimation(g) {
