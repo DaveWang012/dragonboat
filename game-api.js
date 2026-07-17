@@ -4,7 +4,7 @@
   const GATEWAY_GET_USER_BY_PIN_URL = "https://ms.jr.jd.com/gw2/generic/icCreator/newh5/m/getDefaultUserByPin";
   const JD_LOGIN_URL = "https://plogin.m.jd.com/user/login.action?jrWebNativeLogin=false&appid=100&returnurl=";
   const APP_VERSION = "20260619-perf-tune";
-  const ACTIVITY_URL = `https://show.jd.com/n/QwMWVE53XAodKr0x/?pageKey=QwMWVE53XAodKr0x&v=${APP_VERSION}`;
+  const ACTIVITY_URL = window.DRAGONBOAT_ACTIVITY_URL || window.location.href;
   const BASE_GAME_CODE = "dragonboat_h5_202606";
   const BASE_GAME_CODE_DATE = "20260618";
   const PIN_PARAM_NAMES = ["pin", "pt_pin", "jdPin", "userPin"];
@@ -71,6 +71,14 @@
     return host === "localhost" || host === "127.0.0.1" || host === "::1";
   }
 
+  function isJdHost() {
+    return /\.jd\.com$/i.test(window.location.hostname) || window.location.hostname === "jd.com";
+  }
+
+  function isStandaloneHost() {
+    return !isJdHost();
+  }
+
   function hasLoginState() {
     return Boolean(getQueryValue(PIN_PARAM_NAMES) || getCookieValue(PIN_PARAM_NAMES) || getCookieValue(LOGIN_COOKIE_NAMES));
   }
@@ -93,9 +101,17 @@
   }
 
   function ensureLogin() {
-    if (isLocalPreview() || hasLoginState()) return true;
+    if (isLocalPreview() || isStandaloneHost() || hasLoginState()) return true;
     redirectToLogin();
     return false;
+  }
+
+  function readLocalScores() {
+    try {
+      return JSON.parse(localStorage.getItem("dragonboatLeaderboardAll") || localStorage.getItem("dragonboatLeaderboard") || "[]");
+    } catch {
+      return [];
+    }
   }
 
   function isGatewaySuccess(payload) {
@@ -200,6 +216,25 @@
     const gameCode = options.gameCode || getGameCode();
     console.log("[DragonBoat] reportScore gameCode:", gameCode);
     const safeScore = Math.max(0, Math.floor(Number(score) || 0));
+    if (isStandaloneHost()) {
+      const payload = {
+        success: true,
+        resultCode: 0,
+        resultData: {
+          code: 0,
+          msg: "本地静态模式成绩已保存",
+          data: { score: safeScore, gameCode },
+        },
+      };
+      payload.reportIdentity = { pin: pin || "", source: pin ? "pin" : "local" };
+      payload.reportGameCode = gameCode;
+      writeUploadLog("reportScore:local", {
+        gameCode,
+        score: safeScore,
+        identitySource: payload.reportIdentity.source,
+      });
+      return payload;
+    }
     const reqData = {
       gameCode,
       score: safeScore,
@@ -228,6 +263,21 @@
     const gameCode = options.gameCode || getGameCode();
     console.log("[DragonBoat] queryTopRank gameCode:", gameCode);
     const pin = options.pin || getPlayerPin();
+    if (isStandaloneHost()) {
+      const rows = readLocalScores().slice(0, 50);
+      return {
+        success: true,
+        resultCode: 0,
+        queryGameCode: gameCode,
+        source: "local",
+        resultData: {
+          code: 0,
+          data: {
+            rankList: rows,
+          },
+        },
+      };
+    }
     writeUploadLog("queryTopRank:prepare", {
       gameCode,
       sentPin: Boolean(pin),
