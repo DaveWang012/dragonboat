@@ -6,7 +6,7 @@
   const laneOffsets = [-1, 0, 1];
   const laneBoundaryOffsets = [-1.5, -0.5, 0.5, 1.5];
   const keyMap = new Map();
-  const APP_VERSION = "20260717-static-boat-notice";
+  const APP_VERSION = "20260717-manual-notice";
   const ACTIVITY_SHARE_URL = `https://show.jd.com/n/QwMWVE53XAodKr0x/?pageKey=QwMWVE53XAodKr0x&v=${APP_VERSION}`;
   const SHARE_THUMB_URL = "https://m.360buyimg.com/babel/jfs/t16171/127/2505983508/7852/4cfd7bdf/5abc8954N23307760.png";
   const LEADERBOARD_VERSION = APP_VERSION;
@@ -104,6 +104,7 @@
   const noticeFromRulesBtn = document.getElementById("noticeFromRulesBtn");
   const floatingNoticeBtn = document.getElementById("floatingNoticeBtn");
   const noticeCloseBtn = document.getElementById("noticeCloseBtn");
+  const noticeCountdown = document.getElementById("noticeCountdown");
   const noticeFallbackBoat = document.getElementById("noticeFallbackBoat");
   const noticeOfficialBoat = document.getElementById("noticeOfficialBoat");
   const gameBgm = document.getElementById("gameBgm");
@@ -147,8 +148,8 @@
   let pageHidden = document.hidden;
   let resumeBgmOnVisible = false;
   let boatGifLoaded = false;
-  let noticeAutoStartTimer = 0;
-  let noticeAutoStartDeadline = 0;
+  let noticeCountdownTimer = 0;
+  let noticeCountdownDeadline = 0;
   let noticeLaunchPending = false;
 
   state.items = createOpeningItems();
@@ -683,9 +684,9 @@
   function openNoticeOverlay() {
     const options = arguments[0] || {};
     if (!noticeOverlay) return;
-    clearNoticeAutoStart();
+    clearNoticeCountdown();
     noticeLaunchPending = Boolean(options.launchGame);
-    if (noticeCloseBtn) noticeCloseBtn.textContent = noticeLaunchPending ? "开始游戏（3秒）" : "我知道了";
+    if (noticeCloseBtn) noticeCloseBtn.textContent = noticeLaunchPending ? "开始游戏" : "我知道了";
     if (noticeFallbackBoat && !noticeFallbackBoat.getAttribute("src")) {
       const src = noticeFallbackBoat.dataset.src;
       if (src) noticeFallbackBoat.setAttribute("src", src);
@@ -705,13 +706,14 @@
       }
     }
     noticeOverlay.classList.remove("is-hidden");
-    if (noticeLaunchPending) beginNoticeAutoStart();
+    if (noticeLaunchPending) beginNoticeCountdown();
+    else updateNoticeCountdownText(180);
   }
 
   function closeNoticeOverlay() {
     if (!noticeOverlay) return;
     const shouldStartGame = noticeLaunchPending;
-    clearNoticeAutoStart();
+    clearNoticeCountdown();
     noticeLaunchPending = false;
     noticeOverlay.classList.add("is-hidden");
     if (noticeCloseBtn) noticeCloseBtn.textContent = "我知道了";
@@ -728,29 +730,33 @@
     modeBeforeNotice = "";
   }
 
-  function beginNoticeAutoStart() {
-    noticeAutoStartDeadline = performance.now() + 3000;
-    updateNoticeAutoStartButton();
-    noticeAutoStartTimer = window.setInterval(() => {
-      if (!noticeLaunchPending) {
-        clearNoticeAutoStart();
-        return;
-      }
-      updateNoticeAutoStartButton();
-      if (performance.now() >= noticeAutoStartDeadline) closeNoticeOverlay();
-    }, 250);
+  function beginNoticeCountdown() {
+    noticeCountdownDeadline = performance.now() + 180000;
+    updateNoticeCountdown();
+    noticeCountdownTimer = window.setInterval(updateNoticeCountdown, 1000);
   }
 
-  function updateNoticeAutoStartButton() {
-    if (!noticeCloseBtn || !noticeLaunchPending) return;
-    const seconds = Math.max(0, Math.ceil((noticeAutoStartDeadline - performance.now()) / 1000));
-    noticeCloseBtn.textContent = seconds > 0 ? `开始游戏（${seconds}秒）` : "开始游戏";
+  function updateNoticeCountdown() {
+    const seconds = Math.max(0, Math.ceil((noticeCountdownDeadline - performance.now()) / 1000));
+    updateNoticeCountdownText(seconds);
+    if (seconds <= 0) clearNoticeCountdown();
   }
 
-  function clearNoticeAutoStart() {
-    if (!noticeAutoStartTimer) return;
-    clearInterval(noticeAutoStartTimer);
-    noticeAutoStartTimer = 0;
+  function updateNoticeCountdownText(seconds) {
+    if (!noticeCountdown) return;
+    if (seconds <= 0) {
+      noticeCountdown.textContent = "可开始";
+      return;
+    }
+    const minutes = Math.floor(seconds / 60);
+    const rest = seconds % 60;
+    noticeCountdown.textContent = `${String(minutes).padStart(2, "0")}:${String(rest).padStart(2, "0")}`;
+  }
+
+  function clearNoticeCountdown() {
+    if (!noticeCountdownTimer) return;
+    clearInterval(noticeCountdownTimer);
+    noticeCountdownTimer = 0;
   }
 
   let modeBeforePrize = "";

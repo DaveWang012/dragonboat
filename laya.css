@@ -836,6 +836,33 @@ body {
   min-width: 132px;
 }
 
+.notice-countdown {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 226, 126, 0.36);
+  border-radius: 16px;
+  background: rgba(255, 225, 120, 0.1);
+}
+
+.notice-countdown span {
+  color: #cffff1;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.notice-countdown strong {
+  color: #ffe178;
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 2px 0 #642d13;
+}
+
 .notice-dialog {
   height: auto;
   max-height: min(600px, calc(100dvh - 36px));
